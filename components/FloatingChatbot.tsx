@@ -99,7 +99,7 @@ export default function FloatingChatbot() {
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <div>
                 <h3 className="font-semibold">AI Assistant</h3>
-                <p className="text-xs text-blue-100">Tanya tentang project ini</p>
+                <p className="text-xs text-blue-100">Siap membantu Anda</p>
               </div>
             </div>
             <button
@@ -139,9 +139,9 @@ export default function FloatingChatbot() {
                     d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                   />
                 </svg>
-                <p className="text-sm font-medium mb-1">Halo! 👋</p>
+                <p className="text-sm font-medium mb-1">Halo! Ada yang bisa saya bantu? 👋</p>
                 <p className="text-xs">
-                  Tanya saya tentang project ini, struktur code, atau fitur yang ada
+                  Tanya apa saja tentang aplikasi ini, data user, atau fitur yang tersedia
                 </p>
               </div>
             ) : (

@@ -2,6 +2,45 @@ import { NextRequest, NextResponse } from 'next/server';
 import { chatWithGroq } from '@/lib/groq';
 import { verifySession } from '@/lib/session';
 
+const PROJECT_CONTEXT = `Kamu adalah AI assistant untuk project Next.js Dashboard Template. Berikut informasi tentang project ini:
+
+TECH STACK:
+- Next.js 15 dengan App Router
+- TypeScript
+- Prisma ORM dengan PostgreSQL (Supabase)
+- Tailwind CSS + shadcn/ui
+- Authentication dengan JWT (jose)
+- Supabase Storage untuk upload foto
+
+STRUKTUR PROJECT:
+- app/(auth)/ - Halaman login dan register
+- app/dashboard/ - Dashboard dengan layout dan navbar
+- app/api/ - API routes (auth, profile, users, chat)
+- components/ui/ - UI components dari shadcn
+- lib/ - Utilities (prisma, session, supabase, groq)
+- prisma/schema.prisma - Database schema
+
+DATABASE SCHEMA:
+- User: id, email, password, role (ADMIN/USER), createdAt, updatedAt
+- Profile: id, userId, fotoProfil, createdAt, updatedAt
+
+FITUR UTAMA:
+1. Authentication (login/register dengan token)
+2. Role-based access (ADMIN & USER)
+3. Profile management dengan upload foto
+4. User management (khusus ADMIN)
+5. AI Chatbot dengan Groq (Llama 3.3 70B)
+
+ENVIRONMENT VARIABLES:
+- DATABASE_URL & DIRECT_URL (Supabase PostgreSQL)
+- NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY (untuk upload)
+- SESSION_SECRET (JWT secret)
+- REGISTRATION_TOKEN (untuk registrasi admin)
+- GROQ_API_KEY (untuk AI chatbot)
+
+Jawab pertanyaan user tentang project ini dengan jelas dan helpful. Kalau ditanya tentang code, berikan contoh yang relevan dengan struktur project ini.`;
+
 export async function POST(request: NextRequest) {
   try {
     // Verify user is logged in
@@ -22,7 +61,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await chatWithGroq(messages);
+    // Add project context as system message
+    const messagesWithContext = [
+      { role: 'system', content: PROJECT_CONTEXT },
+      ...messages,
+    ];
+
+    const result = await chatWithGroq(messagesWithContext);
 
     if (!result.success) {
       return NextResponse.json(

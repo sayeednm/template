@@ -8,6 +8,8 @@ Chatbot ini menggunakan Groq API dengan model Llama 3.3 70B dan bisa mengakses d
 ✅ Floating button di pojok kanan bawah
 ✅ Paham struktur project dan codebase
 ✅ **Bisa query database untuk jawab pertanyaan tentang data**
+✅ **History percakapan tersimpan otomatis (localStorage)**
+✅ **Bisa hapus history dengan tombol trash**
 ✅ UI yang clean dan responsive
 ✅ Hanya bisa diakses user yang sudah login
 

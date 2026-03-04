@@ -18,6 +18,27 @@ export default function FloatingChatbot() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Load history from localStorage when component mounts
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('chatHistory');
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    }
+  }, []);
+
+  // Save history to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(messages));
+    } else {
+      localStorage.removeItem('chatHistory');
+    }
+  }, [messages]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -185,23 +206,9 @@ export default function FloatingChatbot() {
                 <h3 className="text-base font-semibold text-gray-800 mb-2">
                   Halo! Ada yang bisa saya bantu? 👋
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-gray-500">
                   Tanya tentang data user, fitur aplikasi, atau hal lainnya
                 </p>
-                <div className="flex flex-col gap-2 w-full">
-                  <button
-                    onClick={() => setInput('Berapa jumlah user?')}
-                    className="w-full px-4 py-2 bg-white hover:bg-blue-50 text-gray-700 rounded-lg text-sm border border-gray-200 transition-colors"
-                  >
-                    📊 Berapa jumlah user?
-                  </button>
-                  <button
-                    onClick={() => setInput('Siapa saja admin?')}
-                    className="w-full px-4 py-2 bg-white hover:bg-blue-50 text-gray-700 rounded-lg text-sm border border-gray-200 transition-colors"
-                  >
-                    👥 Siapa saja admin?
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="space-y-3">

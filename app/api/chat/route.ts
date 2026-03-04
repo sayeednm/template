@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatWithGroq } from '@/lib/groq';
 import { verifySession } from '@/lib/session';
+import { detectToolNeeded, executeAITool } from '@/lib/ai-tools';
 
 const PROJECT_CONTEXT = `Kamu adalah AI assistant untuk project Next.js Dashboard Template. Berikut informasi tentang project ini:
 
@@ -31,15 +32,10 @@ FITUR UTAMA:
 4. User management (khusus ADMIN)
 5. AI Chatbot dengan Groq (Llama 3.3 70B)
 
-ENVIRONMENT VARIABLES:
-- DATABASE_URL & DIRECT_URL (Supabase PostgreSQL)
-- NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY (untuk upload)
-- SESSION_SECRET (JWT secret)
-- REGISTRATION_TOKEN (untuk registrasi admin)
-- GROQ_API_KEY (untuk AI chatbot)
+KEMAMPUAN KHUSUS:
+Kamu bisa mengakses data real-time dari database. Ketika user bertanya tentang data (seperti "berapa jumlah user?", "siapa saja admin?"), data akan otomatis diambil dari database dan diberikan kepadamu.
 
-Jawab pertanyaan user tentang project ini dengan jelas dan helpful. Kalau ditanya tentang code, berikan contoh yang relevan dengan struktur project ini.`;
+Jawab pertanyaan user dengan jelas dan helpful. Kalau ditanya tentang code, berikan contoh yang relevan dengan struktur project ini.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,9 +57,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add project context as system message
+    // Get last user message
+    const lastUserMessage = messages[messages.length - 1];
+    
+    // Check if query needs database access
+    const toolNeeded = detectToolNeeded(lastUserMessage.content);
+    
+    let dataContext = '';
+    if (toolNeeded) {
+      console.log('Tool detected:', toolNeeded);
+      const toolResult = await executeAITool(toolNeeded.tool, toolNeeded.params);
+      dataContext = `\n\nDATA DARI DATABASE:\n${JSON.stringify(toolResult, null, 2)}`;
+    }
+
+    // Add project context and data as system message
     const messagesWithContext = [
-      { role: 'system', content: PROJECT_CONTEXT },
+      { role: 'system', content: PROJECT_CONTEXT + dataContext },
       ...messages,
     ];
 

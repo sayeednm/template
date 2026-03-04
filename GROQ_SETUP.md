@@ -1,6 +1,33 @@
 # Setup Groq AI Chatbot
 
-Chatbot ini menggunakan Groq API dengan model Llama 3.3 70B.
+Chatbot ini menggunakan Groq API dengan model Llama 3.3 70B dan bisa mengakses data real-time dari database.
+
+## Fitur Chatbot:
+
+✅ Chat real-time dengan AI
+✅ Floating button di pojok kanan bawah
+✅ Paham struktur project dan codebase
+✅ **Bisa query database untuk jawab pertanyaan tentang data**
+✅ UI yang clean dan responsive
+✅ Hanya bisa diakses user yang sudah login
+
+## Contoh Pertanyaan yang Bisa Dijawab:
+
+### Tentang Data (Real-time dari Database):
+- "Berapa jumlah user yang terdaftar?"
+- "Ada berapa admin?"
+- "Siapa saja user yang terdaftar?"
+- "Berapa user yang punya foto profil?"
+- "Tampilkan 5 user terbaru"
+- "Cari user dengan email admin@example.com"
+
+### Tentang Project:
+- "Jelaskan struktur project ini"
+- "Bagaimana cara kerja authentication?"
+- "Apa saja fitur yang ada?"
+- "Bagaimana cara menambahkan field baru di database?"
+- "Jelaskan tentang role system"
+- "Bagaimana cara upload foto profil?"
 
 ## Langkah Setup:
 
@@ -35,9 +62,14 @@ npm run dev
 ### 5. Test Chatbot
 
 1. Login ke aplikasi
-2. Klik menu **AI Chatbot** di sidebar
-3. Ketik pesan dan klik **Kirim**
-4. AI akan merespon dalam beberapa detik
+2. Lihat floating button biru di pojok kanan bawah
+3. Klik button untuk buka chat
+4. Coba tanya:
+   - "Berapa jumlah user?"
+   - "Siapa saja admin?"
+   - "Jelaskan struktur project"
+
+AI akan menjawab dengan data real-time dari database! 🎉
 
 ## Fitur Chatbot:
 

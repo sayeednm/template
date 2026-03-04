@@ -66,6 +66,12 @@ REGISTRATION_TOKEN
 Value: Token untuk registrasi admin
 Generate dengan: `openssl rand -hex 16`
 
+```
+GROQ_API_KEY
+```
+Value: API key dari Groq (untuk AI Chatbot)
+Dapatkan di: https://console.groq.com/keys
+
 ## Cara Mendapatkan Supabase Credentials:
 
 1. Buka [Supabase Dashboard](https://supabase.com/dashboard)

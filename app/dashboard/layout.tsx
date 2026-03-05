@@ -3,11 +3,9 @@ import { verifySession } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
-import { Suspense } from 'react'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
-import LoadingScreen from '@/components/LoadingScreen'
 
 export default async function DashboardLayout({
   children,
@@ -145,11 +143,7 @@ export default async function DashboardLayout({
             )}
           </nav>
         </aside>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          <Suspense fallback={<LoadingScreen />}>
-            {children}
-          </Suspense>
-        </main>
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
       <FloatingChatbot />
     </div>

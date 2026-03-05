@@ -3,9 +3,15 @@ import { verifySession } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
-import FloatingChatbot from '@/components/FloatingChatbot'
+import dynamic from 'next/dynamic'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
+
+// Lazy load chatbot (tidak perlu di-load langsung)
+const FloatingChatbot = dynamic(() => import('@/components/FloatingChatbot'), {
+  ssr: false,
+  loading: () => null,
+})
 
 export default async function DashboardLayout({
   children,
@@ -42,7 +48,8 @@ export default async function DashboardLayout({
                       alt="Profile"
                       fill
                       className="object-cover"
-                      unoptimized
+                      sizes="40px"
+                      priority
                     />
                   </div>
                 ) : (

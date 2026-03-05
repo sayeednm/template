@@ -29,7 +29,8 @@ export default async function DashboardPage() {
                     alt="Profile"
                     fill
                     className="object-cover"
-                    unoptimized
+                    sizes="(max-width: 640px) 96px, 128px"
+                    priority
                   />
                 </div>
               ) : (

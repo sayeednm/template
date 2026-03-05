@@ -3,9 +3,11 @@ import { verifySession } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
+import { Suspense } from 'react'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
+import LoadingScreen from '@/components/LoadingScreen'
 
 export default async function DashboardLayout({
   children,
@@ -18,8 +20,12 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  // Optimasi: hanya ambil field yang dibutuhkan
   const profile = await prisma.profile.findUnique({
     where: { userId: session.userId },
+    select: {
+      fotoProfil: true,
+    },
   })
 
   return (
@@ -139,7 +145,11 @@ export default async function DashboardLayout({
             )}
           </nav>
         </aside>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          <Suspense fallback={<LoadingScreen />}>
+            {children}
+          </Suspense>
+        </main>
       </div>
       <FloatingChatbot />
     </div>

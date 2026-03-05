@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import prisma from '@/lib/prisma'
 
+// Cache untuk 60 detik
+export const revalidate = 60
+
 // GET - Get current user profile
 export async function GET() {
   try {
@@ -13,9 +16,12 @@ export async function GET() {
       )
     }
 
+    // Optimasi: hanya ambil field yang dibutuhkan
     const profile = await prisma.profile.findUnique({
       where: { userId: session.userId },
-      include: {
+      select: {
+        id: true,
+        fotoProfil: true,
         user: {
           select: {
             email: true,

@@ -92,11 +92,11 @@ export default function FloatingChatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
           aria-label="Open AI Chat"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5 sm:w-6 sm:h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -113,7 +113,7 @@ export default function FloatingChatbot() {
 
       {/* Chat Window - Clean Design */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-xl flex flex-col z-50 border overflow-hidden">
+        <Card className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-2rem)] sm:h-[600px] shadow-xl flex flex-col z-50 border overflow-hidden">
           {/* Header - Simple Gradient */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">

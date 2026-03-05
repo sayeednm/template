@@ -42,11 +42,11 @@ export default function InstallPWA() {
   if (!showInstall) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top duration-500">
-      <div className="bg-white border-2 border-blue-200 rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
+    <div className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-50 animate-in slide-in-from-top duration-500">
+      <div className="bg-white border-2 border-blue-200 rounded-lg shadow-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4 max-w-md mx-auto">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg
-            className="w-6 h-6 text-white"
+            className="w-5 h-5 sm:w-6 sm:h-6 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -59,15 +59,15 @@ export default function InstallPWA() {
             />
           </svg>
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-800 text-sm">Install Aplikasi</h3>
-          <p className="text-xs text-gray-500">Akses lebih cepat dari desktop</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-800 text-xs sm:text-sm">Install Aplikasi</h3>
+          <p className="text-xs text-gray-500 hidden sm:block">Akses lebih cepat dari desktop</p>
         </div>
         <div className="flex gap-2">
           <Button
             onClick={handleInstall}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
           >
             Install
           </Button>
@@ -76,7 +76,7 @@ export default function InstallPWA() {
             className="text-gray-400 hover:text-gray-600 p-1"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

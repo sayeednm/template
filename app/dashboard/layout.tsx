@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma'
 import Image from 'next/image'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
+import MobileSidebar from '@/components/MobileSidebar'
 
 export default async function DashboardLayout({
   children,
@@ -27,14 +28,15 @@ export default async function DashboardLayout({
       <nav className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-800">Dashboard Template</h1>
+            <div className="flex items-center gap-3">
+              <MobileSidebar role={session.role} />
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-800">Dashboard</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Profile Avatar */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {profile?.fotoProfil ? (
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-gray-300 shadow-sm hover:border-blue-400 transition-colors">
+                  <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-gray-300 shadow-sm hover:border-blue-400 transition-colors">
                     <Image
                       src={profile.fotoProfil}
                       alt="Profile"
@@ -44,24 +46,24 @@ export default async function DashboardLayout({
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center border-2 border-gray-300 shadow-sm">
-                    <span className="text-lg font-bold text-white">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center border-2 border-gray-300 shadow-sm">
+                    <span className="text-base sm:text-lg font-bold text-white">
                       {session.email.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
-                <div className="flex flex-col">
+                <div className="hidden sm:flex flex-col">
                   <span className="text-sm font-medium text-gray-700">{session.email}</span>
                   <span className="text-xs text-gray-500">{session.role}</span>
                 </div>
               </div>
               
-              <div className="h-8 w-px bg-gray-300"></div>
+              <div className="hidden sm:block h-8 w-px bg-gray-300"></div>
               
               <form action={logoutAction}>
                 <button
                   type="submit"
-                  className="text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-md transition-colors"
+                  className="text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 sm:px-3 py-2 rounded-md transition-colors"
                 >
                   Logout
                 </button>
@@ -71,7 +73,7 @@ export default async function DashboardLayout({
         </div>
       </nav>
       <div className="flex h-[calc(100vh-4rem)]">
-        <aside className="w-64 bg-white border-r shadow-sm">
+        <aside className="hidden lg:block w-64 bg-white border-r shadow-sm">
           <nav className="p-4 space-y-2">
             <a
               href="/dashboard"
@@ -136,7 +138,7 @@ export default async function DashboardLayout({
             )}
           </nav>
         </aside>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
       <FloatingChatbot />
     </div>

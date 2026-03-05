@@ -3,6 +3,7 @@ import { verifySession } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
+import Link from 'next/link'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
@@ -80,7 +81,7 @@ export default async function DashboardLayout({
       <div className="flex h-[calc(100vh-4rem)]">
         <aside className="hidden lg:block w-64 bg-white border-r shadow-sm">
           <nav className="p-4 space-y-2">
-            <a
+            <Link
               href="/dashboard"
               className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
             >
@@ -98,9 +99,9 @@ export default async function DashboardLayout({
                 />
               </svg>
               <span>Dashboard</span>
-            </a>
+            </Link>
             
-            <a
+            <Link
               href="/dashboard/profile"
               className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
             >
@@ -118,10 +119,10 @@ export default async function DashboardLayout({
                 />
               </svg>
               <span>Profile</span>
-            </a>
+            </Link>
             
             {session.role === 'ADMIN' && (
-              <a
+              <Link
                 href="/dashboard/users"
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
               >
@@ -139,7 +140,7 @@ export default async function DashboardLayout({
                   />
                 </svg>
                 <span>User Management</span>
-              </a>
+              </Link>
             )}
           </nav>
         </aside>

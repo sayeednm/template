@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import prisma from '@/lib/prisma'
 
-// Cache untuk 60 detik
-export const revalidate = 60
-
 // GET - Get current user profile
 export async function GET() {
   try {

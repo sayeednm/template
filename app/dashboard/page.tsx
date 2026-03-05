@@ -3,9 +3,6 @@ import prisma from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Image from 'next/image'
 
-// Cache page selama 30 detik
-export const revalidate = 30
-
 export default async function DashboardPage() {
   const session = await verifySession()
 

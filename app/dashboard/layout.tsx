@@ -4,6 +4,7 @@ import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
 import FloatingChatbot from '@/components/FloatingChatbot'
+import InstallPWA from '@/components/InstallPWA'
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <InstallPWA />
       <nav className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">

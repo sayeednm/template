@@ -24,6 +24,12 @@ export default function CustomDepositInput({ goalId }: Props) {
     const amount = parseInt(display.replace(/\./g, '').replace(/,/g, ''))
     if (!amount || amount <= 0) return
 
+    // Konfirmasi jika deposit >= 500rb
+    if (amount >= 500000) {
+      const ok = confirm(`Konfirmasi deposit ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)}?`)
+      if (!ok) return
+    }
+
     setLoading(true)
     await fetch('/api/savings/deposit', {
       method: 'POST',

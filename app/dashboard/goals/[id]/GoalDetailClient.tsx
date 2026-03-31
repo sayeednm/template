@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { formatRupiah, daysLeft } from '@/lib/utils'
 import SavingsChart from '@/components/SavingsChart'
 import GoalImageUpload from '@/components/GoalImageUpload'
+
 type Transaction = { id: string; amount: number; note: string | null; createdAt: Date }
 type Goal = {
   id: string
@@ -15,6 +16,8 @@ type Goal = {
   currentAmount: number
   deadline: Date | null
   isCompleted: boolean
+  isPaused: boolean
+  pausedAt: Date | null
   imageUrl: string | null
   transactions: Transaction[]
 }
@@ -52,6 +55,27 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
     router.refresh()
   }
 
+  const handleTogglePause = async () => {
+    if (!goal.isPaused) {
+      const ok = confirm('⏸ Jeda Goal?\n\nSaat goal dijeda:\n• Tombol deposit disembunyikan\n• Deadline otomatis mundur sesuai lama jeda\n\nKamu bisa melanjutkan kapan saja.')
+      if (!ok) return
+    } else {
+      const pausedDays = goal.pausedAt
+        ? Math.ceil((new Date().getTime() - new Date(goal.pausedAt).getTime()) / (1000 * 60 * 60 * 24))
+        : 0
+      const ok = confirm(`▶️ Lanjutkan Goal?\n\nGoal dijeda selama ${pausedDays} hari.${goal.deadline ? `\nDeadline dimundurkan ${pausedDays} hari.` : ''}\n\nLanjutkan menabung?`)
+      if (!ok) return
+    }
+    setSaving(true)
+    await fetch(`/api/savings/goals/${goal.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPaused: !goal.isPaused }),
+    })
+    setSaving(false)
+    router.refresh()
+  }
+
   const handleDelete = async () => {
     if (!confirm('Yakin mau hapus goal ini? Semua riwayat akan ikut terhapus.')) return
     setDeleting(true)
@@ -62,7 +86,6 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
-      {/* Back */}
       <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-5 transition-colors">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -70,7 +93,7 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
         Kembali
       </Link>
 
-      {/* Goal Header Card */}
+      {/* Goal Header */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
         {!editing ? (
           <>
@@ -81,6 +104,8 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
                   <h1 className="text-xl font-bold text-slate-800">{goal.title}</h1>
                   {goal.isCompleted ? (
                     <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">✅ Tercapai!</span>
+                  ) : goal.isPaused ? (
+                    <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">⏸ Dijeda</span>
                   ) : days !== null ? (
                     <span className="text-xs text-slate-500">{days > 0 ? `${days} hari lagi` : 'Deadline terlewat'}</span>
                   ) : (
@@ -88,79 +113,53 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => setEditing(true)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1"
-              >
+              <button onClick={() => setEditing(true)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Edit
               </button>
             </div>
-
-            {/* Progress */}
             <div className="mb-3">
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="font-semibold text-emerald-600">{formatRupiah(goal.currentAmount)}</span>
                 <span className="text-slate-400">dari {formatRupiah(goal.targetAmount)}</span>
               </div>
               <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500" style={{ width: `${progress}%` }} />
               </div>
               <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>{progress.toFixed(1)}% tercapai</span>
+                <span>{progress.toFixed(2)}% tercapai</span>
                 <span>Sisa {formatRupiah(remaining)}</span>
               </div>
             </div>
           </>
         ) : (
-          /* Edit Form */
           <div className="space-y-3">
             <h2 className="font-semibold text-slate-700 mb-3">Edit Goal</h2>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Nama Goal</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
-              />
+              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Target Jumlah (Rp)</label>
-              <input
-                type="number"
-                value={form.targetAmount}
-                onChange={(e) => setForm({ ...form, targetAmount: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
-                min="1000"
-              />
+              <input type="number" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm" min="1000" />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Deadline</label>
-              <input
-                type="date"
-                value={form.deadline}
-                onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
-              />
+              <input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm" />
             </div>
             <div className="flex gap-2 pt-1">
-              <button
-                onClick={handleSaveEdit}
-                disabled={saving}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 rounded-xl transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleSaveEdit} disabled={saving}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 rounded-xl transition-colors disabled:opacity-50">
                 {saving ? 'Menyimpan...' : '✓ Simpan'}
               </button>
-              <button
-                onClick={() => setEditing(false)}
-                className="flex-1 border border-slate-200 text-slate-600 text-sm font-medium py-2 rounded-xl hover:bg-slate-50 transition-colors"
-              >
+              <button onClick={() => setEditing(false)}
+                className="flex-1 border border-slate-200 text-slate-600 text-sm font-medium py-2 rounded-xl hover:bg-slate-50 transition-colors">
                 Batal
               </button>
             </div>
@@ -168,7 +167,7 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
         )}
       </div>
 
-      {/* Foto Goal */}
+      {/* Foto */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
         <h2 className="font-semibold text-slate-700 mb-3">📸 Foto Barang Incaran</h2>
         <GoalImageUpload goalId={goal.id} currentImage={goal.imageUrl} />
@@ -178,24 +177,17 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
       {goal.transactions.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
           <h2 className="font-semibold text-slate-700 mb-1">Grafik Tabungan</h2>
-          <p className="text-xs text-slate-400 mb-4">Progress terkumpul vs target</p>
+          <p className="text-xs text-slate-400 mb-4">Progress terkumpul</p>
           <SavingsChart transactions={goal.transactions} />
-          <div className="flex items-center gap-4 mt-3 justify-center">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <span className="w-4 h-0.5 bg-emerald-500 inline-block rounded"></span>
-              Terkumpul
-            </div>
-          </div>
         </div>
       )}
 
-      {/* Riwayat Transaksi */}
+      {/* Riwayat */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
           <h2 className="font-semibold text-slate-700">Riwayat Menabung</h2>
           <p className="text-xs text-slate-400 mt-0.5">{goal.transactions.length} transaksi</p>
         </div>
-
         {goal.transactions.length === 0 ? (
           <div className="py-10 text-center text-slate-400 text-sm">Belum ada transaksi</div>
         ) : (
@@ -207,14 +199,23 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
         )}
       </div>
 
-      {/* Hapus Goal */}
-      <button
-        onClick={handleDelete}
-        disabled={deleting}
-        className="w-full border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50"
-      >
-        {deleting ? 'Menghapus...' : '🗑️ Hapus Goal Ini'}
-      </button>
+      {/* Actions */}
+      <div className="flex gap-3">
+        {!goal.isCompleted && (
+          <button onClick={handleTogglePause} disabled={saving}
+            className={`flex-1 border text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+              goal.isPaused ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-orange-200 text-orange-500 hover:bg-orange-50'
+            }`}>
+            {saving
+              ? <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Memproses...</>
+              : goal.isPaused ? '▶️ Lanjutkan Goal' : '⏸ Jeda Goal'}
+          </button>
+        )}
+        <button onClick={handleDelete} disabled={deleting}
+          className="flex-1 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium py-2.5 rounded-xl transition-colors disabled:opacity-50">
+          {deleting ? 'Menghapus...' : '🗑️ Hapus Goal'}
+        </button>
+      </div>
     </div>
   )
 }
@@ -243,11 +244,8 @@ function TransactionRow({ t, isLast, goalId }: { t: Transaction; isLast: boolean
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm font-bold text-emerald-600">+{formatRupiah(t.amount)}</span>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
-        >
+        <button onClick={handleDelete} disabled={deleting}
+          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>

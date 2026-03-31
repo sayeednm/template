@@ -13,6 +13,11 @@ export default function DepositButton({ goalId, amount, label }: Props) {
   const router = useRouter()
 
   const handleDeposit = async () => {
+    // Konfirmasi jika deposit >= 500rb
+    if (amount >= 500000) {
+      const ok = confirm(`Konfirmasi deposit ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)}?`)
+      if (!ok) return
+    }
     setLoading(true)
     await fetch('/api/savings/deposit', {
       method: 'POST',

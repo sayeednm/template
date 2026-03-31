@@ -49,6 +49,8 @@ model SavingGoal {
   deadline     DateTime?
   emoji        String?       @default("🎯")
   imageUrl     String?
+  isPaused     Boolean       @default(false)
+  pausedAt     DateTime?
   isCompleted  Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatRupiah, daysLeft, calcDailyTarget } from '@/lib/utils'
@@ -17,16 +18,35 @@ type Goal = {
   currentAmount: number
   deadline: Date | null
   isCompleted: boolean
+  isPaused: boolean
   imageUrl: string | null
+  createdAt: Date
   transactions: Transaction[]
 }
 
 type Props = { goals: Goal[]; userId: string; email: string; name: string | null; announcements: { id: string; title: string; content: string; type: string; createdAt: Date }[] }
 
 export default function UserDashboard({ goals, email, name, announcements }: Props) {
+  const [sortBy, setSortBy] = useState<'newest' | 'progress' | 'deadline'>('newest')
+  const [showCompleted, setShowCompleted] = useState(true)
+
   const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const activeGoals = goals.filter((g) => !g.isCompleted)
   const completedGoals = goals.filter((g) => g.isCompleted)
+
+  const filteredGoals = goals
+    .filter((g) => showCompleted || !g.isCompleted)
+    .sort((a, b) => {
+      if (sortBy === 'progress') {
+        return (b.currentAmount / b.targetAmount) - (a.currentAmount / a.targetAmount)
+      }
+      if (sortBy === 'deadline') {
+        if (!a.deadline) return 1
+        if (!b.deadline) return -1
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
@@ -67,15 +87,38 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
         <EmptyState />
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-slate-700">Goal Tabunganmu</h2>
-            <Link href="/dashboard/savings/new" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
-              <span>➕</span> Tambah Goal
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Filter completed */}
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${showCompleted ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}
+              >
+                {showCompleted ? 'Semua' : 'Aktif saja'}
+              </button>
+              {/* Sort */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              >
+                <option value="newest">Terbaru</option>
+                <option value="progress">Progress</option>
+                <option value="deadline">Deadline</option>
+              </select>
+              <Link href="/dashboard/savings/new" className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
+                <span>➕</span> Tambah
+              </Link>
+            </div>
           </div>
-          {goals.map((goal, index) => (
-            <GoalCard key={goal.id} goal={goal} index={index} />
-          ))}
+          {filteredGoals.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 text-sm">Tidak ada goal yang ditampilkan</div>
+          ) : (
+            filteredGoals.map((goal, index) => (
+              <GoalCard key={goal.id} goal={goal} index={index} />
+            ))
+          )}
         </div>
       )}
     </div>
@@ -151,12 +194,17 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
 
         {/* Quick Deposit Buttons */}
         <div className="flex gap-2 flex-wrap mt-3">
-          {!goal.isCompleted && (
+          {!goal.isCompleted && !goal.isPaused && (
             <>
               <DepositButton goalId={goal.id} amount={10000} label="+10rb" />
               <DepositButton goalId={goal.id} amount={50000} label="+50rb" />
               <DepositButton goalId={goal.id} amount={100000} label="+100rb" />
             </>
+          )}
+          {goal.isPaused && (
+            <span className="text-xs px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 font-medium">
+              ⏸ Dijeda
+            </span>
           )}
           <Link
             href={`/dashboard/goals/${goal.id}`}
@@ -165,7 +213,7 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
             Detail
           </Link>
         </div>
-        {!goal.isCompleted && <CustomDepositInput goalId={goal.id} />}
+        {!goal.isCompleted && !goal.isPaused && <CustomDepositInput goalId={goal.id} />}
       </div>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatRupiah, daysLeft, calcDailyTarget } from '@/lib/utils'
+import { formatRupiah, daysLeft, calcDailyTarget, getMotivation } from '@/lib/utils'
 import DepositButton from '@/components/DepositButton'
 import CustomDepositInput from '@/components/CustomDepositInput'
 import DeadlineAlert from '@/components/DeadlineAlert'
@@ -187,10 +187,20 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
 
         {/* Daily target hint */}
         {dailyTarget && !goal.isCompleted && (
-          <p className="text-xs text-slate-400 mb-3">
+          <p className="text-xs text-slate-400 mb-2">
             💡 Nabung <span className="font-semibold text-emerald-600">{formatRupiah(dailyTarget)}/hari</span> untuk mencapai target
           </p>
         )}
+
+        {/* Motivasi progress */}
+        {!goal.isPaused && (() => {
+          const mot = getMotivation(progress)
+          return (
+            <p className={`text-xs font-medium mb-3 ${mot.color}`}>
+              {mot.emoji} {mot.message}
+            </p>
+          )
+        })()}
 
         {/* Quick Deposit Buttons */}
         <div className="flex gap-2 flex-wrap mt-3">

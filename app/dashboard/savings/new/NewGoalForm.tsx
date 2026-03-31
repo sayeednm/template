@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { formatRupiah, daysLeft, calcDailyTarget } from '@/lib/utils'
 
 const EMOJIS = ['🎯', '🏠', '✈️', '💻', '🚗', '📱', '👗', '🎓', '💍', '🏖️', '🎮', '📷']
@@ -10,18 +11,29 @@ export default function NewGoalForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ title: '', targetAmount: '', deadline: '', emoji: '🎯' })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const target = parseFloat(form.targetAmount) || 0
   const days = form.deadline ? daysLeft(new Date(form.deadline)) : null
   const daily = days && days > 0 && target > 0 ? calcDailyTarget(target, new Date(form.deadline)) : null
   const monthly = daily ? daily * 30 : null
 
+  const handleImageChange = (file: File) => {
+    setImageFile(file)
+    const reader = new FileReader()
+    reader.onload = (e) => setImagePreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title || !form.targetAmount) return
     setLoading(true)
 
-    await fetch('/api/savings/goals', {
+    // 1. Buat goal dulu
+    const res = await fetch('/api/savings/goals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -31,6 +43,17 @@ export default function NewGoalForm() {
         emoji: form.emoji,
       }),
     })
+    const goal = await res.json()
+
+    // 2. Upload foto jika ada
+    if (imageFile && goal.id) {
+      const formData = new FormData()
+      formData.append('file', imageFile)
+      await fetch(`/api/savings/goals/${goal.id}/image`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
 
     router.push('/dashboard')
     router.refresh()
@@ -38,6 +61,50 @@ export default function NewGoalForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Foto Barang Incaran */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <label className="block text-sm font-medium text-slate-700 mb-3">📸 Foto Barang Incaran (opsional)</label>
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImageChange(f) }}
+          onDragOver={(e) => e.preventDefault()}
+          className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-dashed border-slate-200 hover:border-emerald-400 transition-colors cursor-pointer bg-slate-50 group"
+        >
+          {imagePreview ? (
+            <>
+              <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-sm font-medium">Ganti Foto</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm">Klik atau drag foto di sini</p>
+              <p className="text-xs">JPG, PNG, WebP · Maks 3MB</p>
+            </div>
+          )}
+        </div>
+        {imagePreview && (
+          <button
+            type="button"
+            onClick={() => { setImageFile(null); setImagePreview(null) }}
+            className="mt-2 text-xs text-red-400 hover:text-red-500"
+          >
+            Hapus foto
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChange(f) }}
+        />
+      </div>
+
       {/* Emoji Picker */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
         <label className="block text-sm font-medium text-slate-700 mb-3">Pilih Ikon</label>
@@ -68,7 +135,6 @@ export default function NewGoalForm() {
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Target Jumlah (Rp)</label>
           <input
@@ -80,11 +146,8 @@ export default function NewGoalForm() {
             min="1000"
             required
           />
-          {target > 0 && (
-            <p className="text-xs text-emerald-600 mt-1 font-medium">{formatRupiah(target)}</p>
-          )}
+          {target > 0 && <p className="text-xs text-emerald-600 mt-1 font-medium">{formatRupiah(target)}</p>}
         </div>
-
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Deadline (opsional)</label>
           <input

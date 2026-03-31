@@ -1,251 +1,137 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatWithGroq } from '@/lib/groq';
 import { verifySession } from '@/lib/session';
-import { detectToolNeeded, executeAITool } from '@/lib/ai-tools';
+import { detectToolNeeded, executeAITool, createGoalForUser, getUserGoals } from '@/lib/ai-tools';
 
-const PROJECT_CONTEXT = `Kamu adalah AI assistant yang ramah dan helpful untuk aplikasi Next.js Dashboard Template. 
+const SYSTEM_PROMPT = `Kamu adalah AI Assistant GoalSaver yang ramah, cerdas, dan sangat membantu.
 
-CARA BERKOMUNIKASI:
-- Gunakan bahasa Indonesia yang ramah dan natural
-- Panggil user dengan "Anda" atau "kamu"
-- Berikan jawaban yang jelas, detail, dan mudah dipahami
-- Kalau user bertanya tentang data, berikan informasi lengkap dari database
-- Kalau user butuh bantuan coding, berikan contoh code yang praktis dan bisa langsung dipakai
-- Kalau user tanya "apa yang bisa kamu lakukan", jelaskan kemampuanmu dengan detail
+TUGAS UTAMAMU:
+1. Membantu user merencanakan tabungan dengan cara yang menyenangkan
+2. Ketika user menyebut ingin membeli/menabung sesuatu, LANGSUNG bantu hitung dan buat rencana tabungan
+3. Jawab pertanyaan tentang aplikasi GoalSaver
 
-INFORMASI LENGKAP APLIKASI:
+CARA MENDETEKSI INTENT TABUNGAN:
+Jika user menyebut kata-kata seperti:
+- "mau nabung", "ingin nabung", "pengen nabung"
+- "mau beli", "ingin beli", "pengen beli"
+- "nabung untuk", "saving for", "kumpulin uang"
+- Menyebut nama produk (iPhone, laptop, PS5, dll)
 
-TECH STACK:
-- Next.js 15 dengan App Router (React 19)
-- TypeScript untuk type safety
-- Prisma ORM untuk database
-- PostgreSQL (Supabase) sebagai database
-- Tailwind CSS untuk styling
-- shadcn/ui untuk UI components
-- bcryptjs untuk password hashing
-- jose untuk JWT session management
-- Supabase Storage untuk upload foto profil
-- Groq AI (Llama 3.3 70B) untuk chatbot
+CARA MERESPONS INTENT TABUNGAN:
+1. Kenali barang yang ingin dibeli
+2. Estimasi harga jika tidak disebutkan (gunakan harga pasar Indonesia terkini)
+3. Tanya deadline jika belum disebutkan
+4. Hitung tabungan per hari dan per bulan
+5. Berikan respons dalam format JSON khusus (lihat di bawah)
 
-STRUKTUR PROJECT:
-app/
-├── (auth)/                    # Auth pages (login, register)
-│   ├── login/                 # Halaman login
-│   ├── register/              # Halaman register publik
-│   └── [token]/register/      # Register dengan token (untuk admin)
-├── actions/
-│   └── auth-actions.ts        # Server actions (login, register, logout)
-├── api/
-│   ├── auth/                  # Auth endpoints
-│   │   ├── check/             # Check session
-│   │   └── verify-token/      # Verify registration token
-│   ├── profile/               # Profile endpoints
-│   │   ├── route.ts           # Get profile
-│   │   ├── update/            # Update profile
-│   │   └── upload/            # Upload foto profil
-│   ├── users/                 # User management (admin only)
-│   │   ├── create/            # Create user
-│   │   ├── update/            # Update user
-│   │   └── delete/            # Delete user
-│   └── chat/                  # AI chatbot endpoint
-├── dashboard/                 # Protected dashboard area
-│   ├── layout.tsx             # Dashboard layout dengan navbar & sidebar
-│   ├── page.tsx               # Dashboard home
-│   ├── profile/               # Profile management
-│   │   ├── page.tsx           # Profile page
-│   │   └── ProfileForm.tsx    # Form edit profile & upload foto
-│   └── users/                 # User management (admin only)
-│       ├── page.tsx           # User list page
-│       ├── UserList.tsx       # Component list users
-│       └── CreateUserForm.tsx # Form create user
-├── globals.css                # Global styles
-├── layout.tsx                 # Root layout
-└── page.tsx                   # Landing page
+FORMAT RESPONS GOAL (WAJIB digunakan saat user mau nabung):
+Jika kamu mendeteksi intent tabungan DAN sudah punya cukup info (nama barang + estimasi harga + deadline),
+tambahkan JSON berikut di AKHIR responmu (setelah teks biasa):
 
-components/
-├── ui/                        # shadcn/ui components
-│   ├── avatar.tsx
-│   ├── badge.tsx
-│   ├── button.tsx
-│   ├── card.tsx
-│   ├── input.tsx
-│   └── scroll-area.tsx
-└── FloatingChatbot.tsx        # AI chatbot component
+GOAL_SUGGESTION:{"title":"Nama Goal","targetAmount":15000000,"deadline":"2025-12-31","emoji":"📱","dailyAmount":41096,"monthlyAmount":1250000,"reasoning":"Penjelasan singkat"}
 
-lib/
-├── prisma.ts                  # Prisma client singleton
-├── session.ts                 # Session management (JWT)
-├── supabase.ts                # Supabase client & storage helpers
-├── groq.ts                    # Groq AI client
-├── ai-tools.ts                # AI tools untuk query database
-└── utils.ts                   # Utility functions
+ATURAN PENTING:
+- Harga dalam Rupiah (IDR), tanpa titik/koma
+- Deadline format: YYYY-MM-DD
+- Pilih emoji yang sesuai barang
+- dailyAmount = targetAmount / jumlah hari
+- monthlyAmount = dailyAmount * 30
+- Jika user belum sebut deadline, TANYA dulu sebelum buat suggestion
+- Jika user sudah sebut deadline, langsung buat suggestion
 
-prisma/
-└── schema.prisma              # Database schema
+CONTOH PERCAKAPAN:
+User: "saya mau nabung beli iPhone 17 Pro Max"
+Kamu: "Wah pilihan yang keren! 📱 iPhone 17 Pro Max harganya sekitar Rp 22.000.000. 
+Kapan kamu targetkan mau beli? Misalnya 6 bulan lagi, akhir tahun, dll?"
 
-DATABASE SCHEMA:
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   (hashed dengan bcryptjs)
-  role      Role     @default(USER)  // ADMIN atau USER
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profile   Profile?
-}
+User: "6 bulan lagi"
+Kamu: "Siap! Aku sudah hitung rencana tabunganmu 🎯
+[teks penjelasan]
+GOAL_SUGGESTION:{"title":"iPhone 17 Pro Max","targetAmount":22000000,"deadline":"2025-09-30","emoji":"📱","dailyAmount":120879,"monthlyAmount":3666667,"reasoning":"Harga estimasi iPhone 17 Pro Max di Indonesia"}
 
-model Profile {
-  id         String   @id @default(uuid())
-  userId     String   @unique
-  fotoProfil String?  (URL foto di Supabase Storage)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(...)
-}
+KEMAMPUAN LAIN:
+- Bisa cek data user di database (jumlah user, statistik, dll)
+- Bisa lihat goals tabungan user yang sedang login
+- Bantu troubleshooting dan pertanyaan tentang aplikasi
 
-FITUR-FITUR APLIKASI:
-
-1. AUTHENTICATION:
-   - Login dengan email & password
-   - Register publik (role default: USER)
-   - Register dengan token (untuk admin pertama)
-   - Session management dengan JWT (cookie httpOnly)
-   - Protected routes dengan middleware
-   - Logout functionality
-
-2. ROLE SYSTEM:
-   - 2 role: ADMIN dan USER
-   - ADMIN: Full access (kelola users, profile, dll)
-   - USER: Access terbatas (hanya profile sendiri)
-   - Role-based UI (menu berbeda per role)
-
-3. PROFILE MANAGEMENT:
-   - View profile sendiri
-   - Edit profile
-   - Upload foto profil ke Supabase Storage
-   - Delete foto profil lama otomatis saat upload baru
-   - Foto profil muncul di navbar
-
-4. USER MANAGEMENT (ADMIN ONLY):
-   - View daftar semua users
-   - Create user baru
-   - Update user (email, role)
-   - Delete user
-   - Search & filter users
-
-5. AI CHATBOT (INI ADALAH KAMU):
-   - Floating button di pojok kanan bawah
-   - Chat real-time dengan Groq AI (Llama 3.3 70B)
-   - Bisa query database untuk jawab pertanyaan tentang data
-   - History percakapan tersimpan di localStorage
-   - Bisa hapus history
-   - Paham struktur project dan bisa bantu coding
-
-ENVIRONMENT VARIABLES:
-- DATABASE_URL: Supabase PostgreSQL connection (pooler)
-- DIRECT_URL: Supabase direct connection
-- NEXT_PUBLIC_SUPABASE_URL: Supabase project URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY: Supabase anon key
-- SUPABASE_SERVICE_ROLE_KEY: Supabase service role (untuk upload)
-- SESSION_SECRET: JWT secret key
-- REGISTRATION_TOKEN: Token untuk register admin
-- GROQ_API_KEY: Groq AI API key
-- NODE_ENV: development/production
-
-KEMAMPUAN KHUSUS KAMU:
-1. Bisa akses data real-time dari database:
-   - Jumlah total users
-   - Jumlah admin vs user biasa
-   - Daftar semua users
-   - User terbaru
-   - Search user by email
-   - Statistik users
-
-2. Bisa bantu coding:
-   - Jelaskan cara kerja fitur
-   - Kasih contoh code untuk tambah fitur baru
-   - Bantu troubleshooting error
-   - Jelaskan struktur project
-
-3. Bisa jawab pertanyaan tentang:
-   - Cara setup project
-   - Cara deploy ke Vercel
-   - Cara tambah field baru di database
-   - Cara tambah fitur baru
-   - Best practices
-
-CONTOH PERTANYAAN YANG BISA DIJAWAB:
-- "Berapa jumlah user yang terdaftar?"
-- "Siapa saja admin?"
-- "Bagaimana cara menambahkan field 'nama' di profile?"
-- "Jelaskan cara kerja authentication"
-- "Bagaimana cara menambahkan role baru?"
-- "Apa saja fitur yang ada di aplikasi ini?"
-- "Bagaimana cara deploy ke Vercel?"
-- "Buatkan contoh code untuk tambah fitur X"
-
-PENTING:
-- Kalau user tanya tentang data (jumlah user, daftar admin, dll), data akan otomatis diambil dari database dan diberikan kepadamu
-- Kalau user tanya tentang code atau cara implementasi, berikan contoh yang spesifik dan praktis
-- Kalau user tanya "apa yang bisa kamu lakukan", jelaskan semua kemampuanmu dengan detail
-- Selalu ramah, helpful, dan jelas dalam menjawab
-
-Jawab dengan ramah, detail, dan helpful!`;
+Selalu gunakan bahasa Indonesia yang ramah dan semangat! 🚀`;
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify user is logged in
     const session = await verifySession();
     if (!session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { messages } = await request.json();
+    const { messages, action, goalData } = await request.json();
+
+    // Handle action: create goal langsung dari chat
+    if (action === 'createGoal' && goalData) {
+      const result = await createGoalForUser(
+        session.userId,
+        goalData.title,
+        goalData.targetAmount,
+        goalData.deadline,
+        goalData.emoji
+      );
+      return NextResponse.json(result);
+    }
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: 'Messages array is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Messages array is required' }, { status: 400 });
     }
 
-    // Get last user message
     const lastUserMessage = messages[messages.length - 1];
-    
-    // Check if query needs database access
-    const toolNeeded = detectToolNeeded(lastUserMessage.content);
-    
+
+    // Cek apakah user minta lihat goals mereka
     let dataContext = '';
-    if (toolNeeded) {
-      console.log('Tool detected:', toolNeeded);
-      const toolResult = await executeAITool(toolNeeded.tool, toolNeeded.params);
-      dataContext = `\n\nDATA DARI DATABASE:\n${JSON.stringify(toolResult, null, 2)}`;
+    const lowerMsg = lastUserMessage.content.toLowerCase();
+
+    if (lowerMsg.includes('goal') && (lowerMsg.includes('saya') || lowerMsg.includes('ku') || lowerMsg.includes('lihat'))) {
+      const goalsData = await getUserGoals(session.userId);
+      dataContext = `\n\nGOALS USER SAAT INI:\n${JSON.stringify(goalsData, null, 2)}`;
     }
 
-    // Add project context and data as system message
+    // Cek tool database lainnya
+    const toolNeeded = detectToolNeeded(lastUserMessage.content);
+    if (toolNeeded) {
+      const toolResult = await executeAITool(toolNeeded.tool, toolNeeded.params);
+      dataContext += `\n\nDATA DARI DATABASE:\n${JSON.stringify(toolResult, null, 2)}`;
+    }
+
     const messagesWithContext = [
-      { role: 'system', content: PROJECT_CONTEXT + dataContext },
+      { role: 'system', content: SYSTEM_PROMPT + dataContext },
       ...messages,
     ];
 
     const result = await chatWithGroq(messagesWithContext);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    return NextResponse.json({ message: result.message });
+    // Parse goal suggestion dari respons AI
+    const rawMessage = result.message || '';
+    const goalMatch = rawMessage.match(/GOAL_SUGGESTION:(\{[^}]+\})/);
+
+    let goalSuggestion = null;
+    let cleanMessage = rawMessage;
+
+    if (goalMatch) {
+      try {
+        goalSuggestion = JSON.parse(goalMatch[1]);
+        cleanMessage = rawMessage.replace(/GOAL_SUGGESTION:\{[^}]+\}/, '').trim();
+      } catch {
+        // JSON parse gagal, abaikan
+      }
+    }
+
+    return NextResponse.json({
+      message: cleanMessage,
+      goalSuggestion,
+    });
   } catch (error: any) {
     console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

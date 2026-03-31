@@ -1,15 +1,28 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useRouter } from 'next/navigation';
 
 type Message = {
   role: 'user' | 'assistant';
   content: string;
+  goalSuggestion?: GoalSuggestion | null;
+  goalCreated?: boolean;
 };
+
+type GoalSuggestion = {
+  title: string;
+  targetAmount: number;
+  deadline: string | null;
+  emoji: string;
+  dailyAmount: number;
+  monthlyAmount: number;
+  reasoning: string;
+};
+
+function formatRp(amount: number) {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+}
 
 export default function FloatingChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,32 +30,20 @@ export default function FloatingChatbot() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
-  // Load history from localStorage when component mounts
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatHistory');
-    if (savedMessages) {
-      try {
-        setMessages(JSON.parse(savedMessages));
-      } catch (error) {
-        console.error('Failed to load chat history:', error);
-      }
-    }
+    const saved = localStorage.getItem('chatHistory');
+    if (saved) { try { setMessages(JSON.parse(saved)); } catch {} }
   }, []);
 
-  // Save history to localStorage whenever messages change
   useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
-    } else {
-      localStorage.removeItem('chatHistory');
-    }
+    if (messages.length > 0) localStorage.setItem('chatHistory', JSON.stringify(messages));
+    else localStorage.removeItem('chatHistory');
   }, [messages]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -50,265 +51,215 @@ export default function FloatingChatbot() {
     if (!input.trim() || loading) return;
 
     const userMessage: Message = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-        }),
+        body: JSON.stringify({ messages: updatedMessages }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response');
-      }
-
-      const assistantMessage: Message = {
+      setMessages((prev) => [...prev, {
         role: 'assistant',
         content: data.message,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error: any) {
-      console.error('Chat error:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: 'Maaf, terjadi kesalahan. Silakan coba lagi.',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+        goalSuggestion: data.goalSuggestion ?? null,
+      }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Maaf, terjadi kesalahan. Coba lagi ya!' }]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCreateGoal = async (suggestion: GoalSuggestion, msgIndex: number) => {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'createGoal', goalData: suggestion }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      setMessages((prev) => prev.map((m, i) =>
+        i === msgIndex ? { ...m, goalCreated: true, goalSuggestion: null } : m
+      ));
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: `✅ Goal "${suggestion.emoji} ${suggestion.title}" berhasil dibuat! Yuk mulai nabung sekarang 💪`,
+      }]);
+      router.refresh();
+    }
+  };
+
+  const quickPrompts = [
+    '💻 Nabung beli laptop',
+    '📱 Nabung beli iPhone',
+    '✈️ Nabung liburan',
+    '🎮 Nabung beli PS5',
+  ];
+
   return (
     <>
-      {/* Floating Button - Simple & Clean */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
-          aria-label="Open AI Chat"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
         >
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-            />
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
         </button>
       )}
 
-      {/* Chat Window - Clean Design */}
       {isOpen && (
-        <Card className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-2rem)] sm:h-[600px] shadow-xl flex flex-col z-50 border overflow-hidden">
-          {/* Header - Simple Gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[calc(100vh-2rem)] sm:h-[600px] shadow-xl flex flex-col z-50 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
+              <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-lg">🤖</div>
               <div>
-                <h3 className="font-semibold">AI Assistant</h3>
-                <p className="text-xs text-blue-100">Siap membantu Anda</p>
+                <h3 className="font-semibold text-sm">GoalSaver AI</h3>
+                <p className="text-xs text-emerald-100">Bantu rencanakan tabunganmu</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {messages.length > 0 && (
-                <button
-                  onClick={() => {
-                    if (confirm('Hapus semua percakapan?')) {
-                      setMessages([]);
-                    }
-                  }}
-                  className="hover:bg-white/20 rounded-lg p-1.5 transition-colors"
-                  title="Hapus percakapan"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
+                <button onClick={() => { if (confirm('Hapus percakapan?')) setMessages([]) }} className="hover:bg-white/20 rounded-lg p-1.5 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               )}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="hover:bg-white/20 rounded-lg p-1.5 transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+              <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 rounded-lg p-1.5 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 p-4 bg-gray-50" ref={scrollRef}>
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-3">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
+                <div className="text-5xl mb-3">🤖</div>
+                <h3 className="font-semibold text-slate-700 mb-1">Halo! Aku GoalSaver AI</h3>
+                <p className="text-sm text-slate-500 mb-5">Ceritakan apa yang ingin kamu tabung, aku bantu hitung dan buatkan goalnya!</p>
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  {quickPrompts.map((p) => (
+                    <button key={p} onClick={() => setInput(p.split(' ').slice(1).join(' '))}
+                      className="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-colors text-left">
+                      {p}
+                    </button>
+                  ))}
                 </div>
-                <h3 className="text-base font-semibold text-gray-800 mb-2">
-                  Halo! Ada yang bisa saya bantu? 👋
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Tanya tentang data user, fitur aplikasi, atau hal lainnya
-                </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex gap-2 ${
-                      msg.role === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {msg.role === 'assistant' && (
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                          />
-                        </svg>
+              messages.map((msg, idx) => (
+                <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.role === 'assistant' && (
+                    <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 text-xs">🤖</div>
+                  )}
+                  <div className="max-w-[80%] space-y-2">
+                    {msg.content && (
+                      <div className={`rounded-2xl px-4 py-2.5 text-sm ${msg.role === 'user' ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+                        <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                       </div>
                     )}
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                        msg.role === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-200'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex gap-2 justify-start">
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+
+                    {/* Goal Suggestion Card */}
+                    {msg.goalSuggestion && !msg.goalCreated && (
+                      <div className="bg-white border-2 border-emerald-300 rounded-2xl p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-2xl">{msg.goalSuggestion.emoji}</span>
+                          <div>
+                            <p className="font-semibold text-slate-800 text-sm">{msg.goalSuggestion.title}</p>
+                            <p className="text-xs text-slate-400">{msg.goalSuggestion.reasoning}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <div className="bg-emerald-50 rounded-xl p-2 text-center">
+                            <p className="text-xs text-slate-500">Target</p>
+                            <p className="text-sm font-bold text-emerald-600">{formatRp(msg.goalSuggestion.targetAmount)}</p>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-2 text-center">
+                            <p className="text-xs text-slate-500">Per bulan</p>
+                            <p className="text-sm font-bold text-slate-700">{formatRp(msg.goalSuggestion.monthlyAmount)}</p>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-2 text-center">
+                            <p className="text-xs text-slate-500">Per hari</p>
+                            <p className="text-sm font-bold text-slate-700">{formatRp(msg.goalSuggestion.dailyAmount)}</p>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-2 text-center">
+                            <p className="text-xs text-slate-500">Deadline</p>
+                            <p className="text-sm font-bold text-slate-700">
+                              {msg.goalSuggestion.deadline
+                                ? new Date(msg.goalSuggestion.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : 'Tanpa batas'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleCreateGoal(msg.goalSuggestion!, idx)}
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+                        >
+                          ✨ Buat Goal Ini Sekarang!
+                        </button>
                       </div>
-                    </div>
+                    )}
+
+                    {msg.goalCreated && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-700 font-medium">
+                        ✅ Goal berhasil dibuat!
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+              ))
+            )}
+
+            {loading && (
+              <div className="flex gap-2 justify-start">
+                <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center text-xs">🤖</div>
+                <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3">
+                  <div className="flex gap-1">
+                    {[0, 0.15, 0.3].map((delay, i) => (
+                      <div key={i} className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: `${delay}s` }} />
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
-          </ScrollArea>
+          </div>
 
-          {/* Input Area - Clean & Simple */}
-          <form onSubmit={sendMessage} className="p-4 bg-white border-t">
+          {/* Input */}
+          <form onSubmit={sendMessage} className="p-3 bg-white border-t border-slate-100">
             <div className="flex gap-2">
-              <Input
+              <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ketik pesan..."
+                placeholder="Ceritakan apa yang mau kamu tabung..."
                 disabled={loading}
-                className="flex-1 rounded-lg"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
               />
-              <Button
+              <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-4 transition-colors disabled:opacity-50"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
-              </Button>
+              </button>
             </div>
           </form>
-        </Card>
+        </div>
       )}
     </>
   );

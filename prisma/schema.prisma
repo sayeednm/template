@@ -48,6 +48,7 @@ model SavingGoal {
   currentAmount Float        @default(0)
   deadline     DateTime?
   emoji        String?       @default("🎯")
+  imageUrl     String?
   isCompleted  Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

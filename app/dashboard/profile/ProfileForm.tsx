@@ -1,196 +1,220 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Image from 'next/image'
 
-type Profile = {
-  id: string
-  fotoProfil: string | null
-} | null
+type Profile = { id: string; fotoProfil: string | null; name: string | null } | null
+type Props = { profile: Profile; userEmail: string; userId: string }
 
-export default function ProfileForm({ 
-  profile, 
-  userEmail 
-}: { 
-  profile: Profile
-  userEmail: string
-}) {
+type Toast = { message: string; type: 'success' | 'error' }
+
+function useToast() {
+  const [toast, setToast] = useState<Toast | null>(null)
+  const show = useCallback((message: string, type: Toast['type'] = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }, [])
+  return { toast, show }
+}
+
+export default function ProfileForm({ profile, userEmail }: Props) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [previewImage, setPreviewImage] = useState(profile?.fotoProfil || '')
+  const { toast, show } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Profile state
+  const [name, setName] = useState(profile?.name ?? '')
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [preview, setPreview] = useState(profile?.fotoProfil ?? '')
+  const [uploading, setUploading] = useState(false)
+
+  // Password state
+  const [pw, setPw] = useState({ current: '', new: '', confirm: '' })
+  const [savingPw, setSavingPw] = useState(false)
+
+  const pwValid = pw.new.length >= 6 && pw.new === pw.confirm && pw.current.length > 0
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 2 * 1024 * 1024) { show('Ukuran file maks 2MB', 'error'); return }
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!validTypes.includes(file.type)) {
-      setError('Tipe file tidak valid. Hanya JPEG, PNG, WebP, dan GIF yang diperbolehkan.')
-      return
-    }
-
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Ukuran file melebihi 2MB.')
-      return
-    }
+    // Preview lokal
+    const reader = new FileReader()
+    reader.onload = (ev) => setPreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
 
     setUploading(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/profile/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setSuccess('Foto berhasil diupload!')
-        setPreviewImage(result.url)
-        router.refresh()
-      } else {
-        setError(result.message)
-      }
-    } catch (error) {
-      setError('Terjadi kesalahan saat upload foto.')
-    }
-
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/profile/upload', { method: 'POST', body: formData })
+    const data = await res.json()
+    if (data.success) { show('Foto profil berhasil diperbarui'); router.refresh() }
+    else show(data.message ?? 'Gagal upload', 'error')
     setUploading(false)
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Apakah Anda yakin ingin menghapus foto profil?')) return
+  const handleDeletePhoto = async () => {
+    if (!confirm('Hapus foto profil?')) return
+    const res = await fetch('/api/profile/update', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fotoProfil: null }),
+    })
+    const data = await res.json()
+    if (data.success) { setPreview(''); show('Foto profil dihapus'); router.refresh() }
+    else show(data.message ?? 'Gagal', 'error')
+  }
 
-    setLoading(true)
-    setError('')
-    setSuccess('')
+  const handleSaveProfile = async () => {
+    setSavingProfile(true)
+    const res = await fetch('/api/profile/update', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    const data = await res.json()
+    if (data.success) { show('Profil berhasil disimpan'); router.refresh() }
+    else show(data.message ?? 'Gagal', 'error')
+    setSavingProfile(false)
+  }
 
-    try {
-      const response = await fetch('/api/profile/update', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fotoProfil: null }),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setSuccess('Foto profil berhasil dihapus!')
-        setPreviewImage('')
-        router.refresh()
-      } else {
-        setError(result.message)
-      }
-    } catch (error) {
-      setError('Terjadi kesalahan saat menghapus foto.')
-    }
-
-    setLoading(false)
+  const handleChangePassword = async () => {
+    if (!pwValid) return
+    setSavingPw(true)
+    const res = await fetch('/api/profile/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: pw.current, newPassword: pw.new }),
+    })
+    const data = await res.json()
+    if (data.success) { show('Password berhasil diperbarui'); setPw({ current: '', new: '', confirm: '' }) }
+    else show(data.message ?? 'Gagal', 'error')
+    setSavingPw(false)
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informasi Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {error && (
-            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="bg-green-50 text-green-700 text-sm p-3 rounded-md">
-              {success}
-            </div>
-          )}
+    <div className="space-y-5">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
+          toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.message}
+        </div>
+      )}
 
-          {/* Email (Read-only) */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-500">Email</label>
-            <Input value={userEmail} disabled className="bg-gray-50" />
-          </div>
-
-          {/* Foto Profil Preview - Centered */}
-          <div className="flex flex-col items-center gap-4 py-6">
-            <div className="relative">
-              {previewImage ? (
-                <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-gray-200 shadow-lg">
-                  <Image
-                    src={previewImage}
-                    alt="Profile"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              ) : (
-                <div className="w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-4 border-gray-200 shadow-lg">
-                  <span className="text-6xl font-bold text-white">
-                    {userEmail.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+      {/* Foto Profil */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 className="font-semibold text-slate-700 mb-5">Foto Profil</h2>
+        <div className="flex flex-col sm:flex-row items-center gap-5">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-emerald-100 cursor-pointer group flex-shrink-0"
+          >
+            {preview ? (
+              <Image src={preview} alt="Profile" fill className="object-cover" unoptimized />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                <span className="text-3xl font-bold text-white">{userEmail.charAt(0).toUpperCase()}</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+              <span className="text-white text-xs font-medium">Ganti</span>
             </div>
-            <div className="text-center">
-              <p className="text-lg font-semibold">{userEmail}</p>
-              <p className="text-sm text-gray-500">Foto Profil</p>
-            </div>
-          </div>
-
-          {/* Upload File */}
-          <div className="space-y-2">
-            <label htmlFor="fileUpload" className="text-sm font-medium">
-              Upload Foto Profil
-            </label>
-            <Input
-              id="fileUpload"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleFileUpload}
-              disabled={uploading}
-              className="cursor-pointer"
-            />
-            <p className="text-xs text-gray-500">
-              Format: JPEG, PNG, WebP, GIF. Maksimal 2MB.
-            </p>
             {uploading && (
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span>Uploading...</span>
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-full">
+                <svg className="w-5 h-5 animate-spin text-emerald-500" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
               </div>
             )}
           </div>
-
-          {/* Delete Button */}
-          {profile?.fotoProfil && (
-            <Button 
-              type="button" 
-              variant="destructive" 
-              onClick={handleDelete}
-              disabled={loading || uploading}
-              className="w-full"
-            >
-              {loading ? 'Menghapus...' : 'Hapus Foto Profil'}
-            </Button>
-          )}
+          <div className="text-center sm:text-left">
+            <p className="font-medium text-slate-700">{name || userEmail.split('@')[0]}</p>
+            <p className="text-sm text-slate-400 mb-3">{userEmail}</p>
+            <div className="flex gap-2 justify-center sm:justify-start">
+              <button onClick={() => fileInputRef.current?.click()} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors">
+                Upload Foto
+              </button>
+              {preview && (
+                <button onClick={handleDeletePhoto} className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+                  Hapus
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleFileChange} />
+      </div>
+
+      {/* Data Diri */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 className="font-semibold text-slate-700 mb-5">Informasi Profil</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Email</label>
+            <input value={userEmail} disabled className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-sm cursor-not-allowed" />
+            <p className="text-xs text-slate-400 mt-1">Email tidak dapat diubah</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Nama Lengkap</label>
+            <input
+              type="text" value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="Masukkan nama lengkap"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleSaveProfile} disabled={savingProfile}
+          className="mt-5 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50"
+        >
+          {savingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}
+        </button>
+      </div>
+
+      {/* Ganti Password */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 className="font-semibold text-slate-700 mb-1">Keamanan Akun</h2>
+        <p className="text-xs text-slate-400 mb-5">Ganti password secara berkala untuk keamanan akunmu</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Password Saat Ini</label>
+            <input
+              type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })}
+              placeholder="••••••••"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Password Baru</label>
+            <input
+              type="password" value={pw.new} onChange={(e) => setPw({ ...pw, new: e.target.value })}
+              placeholder="Minimal 6 karakter"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-600 mb-1.5">Konfirmasi Password Baru</label>
+            <input
+              type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
+              placeholder="Ulangi password baru"
+              className={`w-full px-4 py-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm ${
+                pw.confirm && pw.new !== pw.confirm ? 'border-red-300 bg-red-50' : 'border-slate-200'
+              }`}
+            />
+            {pw.confirm && pw.new !== pw.confirm && (
+              <p className="text-xs text-red-500 mt-1">Password tidak cocok</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={handleChangePassword} disabled={!pwValid || savingPw}
+          className="mt-5 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50"
+        >
+          {savingPw ? 'Memperbarui...' : 'Update Password'}
+        </button>
+      </div>
+    </div>
   )
 }

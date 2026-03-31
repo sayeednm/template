@@ -37,10 +37,10 @@ export default async function HistoryPage() {
                 <span className="text-2xl">{t.goalEmoji ?? '🎯'}</span>
                 <div>
                   <p className="text-sm font-medium text-slate-700">{t.goalTitle}</p>
+                  {t.note && <p className="text-xs text-slate-500 italic">"{t.note}"</p>}
                   <p className="text-xs text-slate-400">
                     {new Date(t.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  {t.note && <p className="text-xs text-slate-500 italic">{t.note}</p>}
                 </div>
               </div>
               <span className="text-sm font-bold text-emerald-600">+{formatRupiah(t.amount)}</span>

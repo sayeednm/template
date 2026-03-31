@@ -1,24 +1,26 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import ThemeLoader from '@/components/ThemeLoader'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Dashboard Template',
-  description: 'Next.js Dashboard Template with Supabase & Prisma',
+  title: 'GoalSaver',
+  description: 'Aplikasi tabungan berbasis goal',
   manifest: '/manifest.json',
-  themeColor: '#2563eb',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Dashboard',
+    title: 'GoalSaver',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#10b981',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -31,8 +33,22 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        {/* Inject dark mode sebelum render untuk hindari flash */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              var s = localStorage.getItem('goalsaver_settings');
+              if (s && JSON.parse(s).darkMode) {
+                document.documentElement.classList.add('dark');
+              }
+            } catch(e) {}
+          `
+        }} />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ThemeLoader />
+        {children}
+      </body>
     </html>
   )
 }

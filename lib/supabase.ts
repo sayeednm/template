@@ -110,3 +110,34 @@ export function getFileNameFromUrl(url: string): string | null {
     return null
   }
 }
+
+// Upload goal image ke bucket 'goal-images'
+export async function uploadGoalImage(fileBuffer: Buffer, fileName: string, contentType: string) {
+  try {
+    if (!supabaseAdmin) throw new Error('Supabase admin client not configured')
+
+    const { error } = await supabaseAdmin.storage
+      .from('goal-images')
+      .upload(fileName, fileBuffer, { contentType, cacheControl: '3600', upsert: true })
+
+    if (error) throw error
+
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from('goal-images')
+      .getPublicUrl(fileName)
+
+    return { success: true, url: publicUrl }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deleteGoalImage(fileName: string) {
+  try {
+    if (!supabaseAdmin) return { success: false }
+    await supabaseAdmin.storage.from('goal-images').remove([fileName])
+    return { success: true }
+  } catch {
+    return { success: false }
+  }
+}

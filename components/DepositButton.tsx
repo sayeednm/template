@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getSettings } from '@/lib/settings'
+import { formatRupiah } from '@/lib/utils'
+import { sendNotification } from '@/lib/notifications'
 
 type Props = { goalId: string; amount: number; label: string }
 
@@ -16,6 +19,12 @@ export default function DepositButton({ goalId, amount, label }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ goalId, amount }),
     })
+
+    const settings = getSettings()
+    if (settings.notifDeposit) {
+      sendNotification('GoalSaver 💸', `+${formatRupiah(amount)} berhasil ditabung!`)
+    }
+
     router.refresh()
     setLoading(false)
   }

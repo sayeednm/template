@@ -123,7 +123,8 @@ export async function registerAction(prevState: any, formData: FormData) {
       data: {
         email,
         password: passwordHash,
-        role: role || 'ADMIN',
+        // Kalau ada token valid, pakai role yang dikirim. Kalau tidak, default USER
+        role: token ? (role || 'ADMIN') : 'USER',
       },
     })
 

@@ -190,3 +190,45 @@ export function detectToolNeeded(query: string): { tool: string; params?: any } 
 
   return null;
 }
+
+// Tool untuk membuat goal tabungan baru
+export async function createGoalForUser(
+  userId: string,
+  title: string,
+  targetAmount: number,
+  deadline: string | null,
+  emoji: string = '🎯'
+) {
+  try {
+    const goal = await prisma.savingGoal.create({
+      data: {
+        userId,
+        title,
+        targetAmount,
+        deadline: deadline ? new Date(deadline) : null,
+        emoji,
+      },
+    })
+    return { success: true, goal }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+// Ambil goals milik user
+export async function getUserGoals(userId: string) {
+  const goals = await prisma.savingGoal.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      targetAmount: true,
+      currentAmount: true,
+      deadline: true,
+      isCompleted: true,
+      emoji: true,
+    },
+  })
+  return { goals, count: goals.length }
+}

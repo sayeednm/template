@@ -6,6 +6,7 @@ import { formatRupiah, daysLeft, calcDailyTarget } from '@/lib/utils'
 import DepositButton from '@/components/DepositButton'
 import CustomDepositInput from '@/components/CustomDepositInput'
 import DeadlineAlert from '@/components/DeadlineAlert'
+import AnnouncementBanner from '@/components/AnnouncementBanner'
 
 type Transaction = { id: string; amount: number; note: string | null; createdAt: Date }
 type Goal = {
@@ -20,9 +21,9 @@ type Goal = {
   transactions: Transaction[]
 }
 
-type Props = { goals: Goal[]; userId: string; email: string; name: string | null }
+type Props = { goals: Goal[]; userId: string; email: string; name: string | null; announcements: { id: string; title: string; content: string; type: string; createdAt: Date }[] }
 
-export default function UserDashboard({ goals, email, name }: Props) {
+export default function UserDashboard({ goals, email, name, announcements }: Props) {
   const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const activeGoals = goals.filter((g) => !g.isCompleted)
   const completedGoals = goals.filter((g) => g.isCompleted)
@@ -54,6 +55,9 @@ export default function UserDashboard({ goals, email, name }: Props) {
           </div>
         </div>
       )}
+
+      {/* Announcement Banner */}
+      <AnnouncementBanner announcements={announcements} />
 
       {/* Deadline Alerts */}
       <DeadlineAlert goals={goals.filter(g => g.deadline !== null) as any} />
@@ -127,7 +131,7 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
         {/* Progress Bar */}
         <div className="mb-3">
           <div className="flex justify-between text-xs text-slate-500 mb-1">
-            <span>{progress.toFixed(1)}% tercapai</span>
+            <span>{progress.toFixed(2)}% tercapai</span>
             <span>Sisa {formatRupiah(remaining)}</span>
           </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden">

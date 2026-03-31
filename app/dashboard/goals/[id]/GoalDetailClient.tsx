@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { formatRupiah, daysLeft } from '@/lib/utils'
 import SavingsChart from '@/components/SavingsChart'
 import GoalImageUpload from '@/components/GoalImageUpload'
-
 type Transaction = { id: string; amount: number; note: string | null; createdAt: Date }
 type Goal = {
   id: string
@@ -202,24 +201,7 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
         ) : (
           <div>
             {goal.transactions.map((t, i) => (
-              <div
-                key={t.id}
-                className={`flex items-center justify-between px-5 py-3.5 ${i !== goal.transactions.length - 1 ? 'border-b border-slate-50' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-sm">💸</div>
-                  <div>
-                    <p className="text-xs font-medium text-slate-700">{t.note ?? 'Deposit'}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(t.createdAt).toLocaleDateString('id-ID', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-sm font-bold text-emerald-600">+{formatRupiah(t.amount)}</span>
-              </div>
+              <TransactionRow key={t.id} t={t} isLast={i === goal.transactions.length - 1} goalId={goal.id} />
             ))}
           </div>
         )}
@@ -233,6 +215,44 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
       >
         {deleting ? 'Menghapus...' : '🗑️ Hapus Goal Ini'}
       </button>
+    </div>
+  )
+}
+
+function TransactionRow({ t, isLast, goalId }: { t: Transaction; isLast: boolean; goalId: string }) {
+  const [deleting, setDeleting] = useState(false)
+  const router = useRouter()
+
+  const handleDelete = async () => {
+    if (!confirm('Hapus transaksi ini? Saldo goal akan berkurang.')) return
+    setDeleting(true)
+    await fetch(`/api/savings/transactions/${t.id}`, { method: 'DELETE' })
+    router.refresh()
+  }
+
+  return (
+    <div className={`flex items-center justify-between px-5 py-3.5 group hover:bg-slate-50 transition-colors ${!isLast ? 'border-b border-slate-50' : ''}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-sm">💸</div>
+        <div>
+          <p className="text-xs font-medium text-slate-700">{t.note ?? 'Deposit'}</p>
+          <p className="text-xs text-slate-400">
+            {new Date(t.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold text-emerald-600">+{formatRupiah(t.amount)}</span>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

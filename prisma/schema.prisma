@@ -70,3 +70,14 @@ model Transaction {
 
   @@map("transactions")
 }
+
+model Announcement {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  content   String
+  type      String   @default("info") // info, update, warning
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("announcements")
+}

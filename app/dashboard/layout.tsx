@@ -32,6 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const adminLinks = [
     { href: '/dashboard', icon: '📊', label: 'Overview' },
     { href: '/dashboard/users', icon: '👥', label: 'Pengguna' },
+    { href: '/dashboard/announcements', icon: '📢', label: 'Pengumuman' },
     { href: '/dashboard/reports', icon: '📈', label: 'Laporan' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
   ]

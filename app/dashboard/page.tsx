@@ -37,19 +37,21 @@ export default async function DashboardPage() {
   }
 
   // User: ambil goals milik user ini saja
-  const [goals, profile] = await Promise.all([
+  const [goals, profile, announcements] = await Promise.all([
     prisma.savingGoal.findMany({
       where: { userId: session!.userId },
       orderBy: { createdAt: 'desc' },
-      include: {
-        transactions: { orderBy: { createdAt: 'desc' }, take: 3 },
-      },
+      include: { transactions: { orderBy: { createdAt: 'desc' }, take: 3 } },
     }),
     prisma.profile.findUnique({
       where: { userId: session!.userId },
       select: { name: true },
     }),
+    prisma.announcement.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
   ])
 
-  return <UserDashboard goals={goals} userId={session!.userId} email={session!.email} name={profile?.name ?? null} />
+  return <UserDashboard goals={goals} userId={session!.userId} email={session!.email} name={profile?.name ?? null} announcements={announcements} />
 }

@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
 
     const messagesWithContext = [
       { role: 'system', content: SYSTEM_PROMPT + dataContext },
-      ...messages,
+      // Hanya kirim role & content ke Groq, hapus field ekstra
+      ...messages.map((m: any) => ({ role: m.role, content: m.content })),
     ];
 
     const result = await chatWithGroq(messagesWithContext);

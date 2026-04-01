@@ -25,6 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: '/dashboard', icon: '🏠', label: 'Dashboard' },
     { href: '/dashboard/savings/new', icon: '➕', label: 'Tambah Target' },
     { href: '/dashboard/savings/history', icon: '📋', label: 'Riwayat' },
+    { href: '/dashboard/feedback', icon: '💬', label: 'Hubungi Admin' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
     { href: '/dashboard/settings', icon: '⚙️', label: 'Pengaturan' },
   ]
@@ -33,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: '/dashboard', icon: '📊', label: 'Overview' },
     { href: '/dashboard/users', icon: '👥', label: 'Pengguna' },
     { href: '/dashboard/announcements', icon: '📢', label: 'Pengumuman' },
+    { href: '/dashboard/admin-feedback', icon: '💬', label: 'Pesan Masuk' },
     { href: '/dashboard/reports', icon: '📈', label: 'Laporan' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
   ]

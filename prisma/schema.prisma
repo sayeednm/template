@@ -23,6 +23,7 @@ model User {
 
   profile     Profile?
   savingGoals SavingGoal[]
+  feedbacks   Feedback[]
 
   @@map("users")
 }
@@ -82,4 +83,20 @@ model Announcement {
   updatedAt DateTime @updatedAt
 
   @@map("announcements")
+}
+
+model Feedback {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  subject   String
+  message   String
+  category  String   @default("question")
+  status    String   @default("unread")
+  reply     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
 }

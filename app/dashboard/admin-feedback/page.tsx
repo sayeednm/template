@@ -1,0 +1,32 @@
+import { verifySession } from '@/lib/session'
+import { redirect } from 'next/navigation'
+import prisma from '@/lib/prisma'
+import AdminFeedbackClient from './AdminFeedbackClient'
+
+export default async function AdminFeedbackPage() {
+  const session = await verifySession()
+  if (session?.role !== 'ADMIN') redirect('/dashboard')
+
+  const feedbacks = await prisma.feedback.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { user: { select: { email: true } } },
+  })
+
+  const unreadCount = feedbacks.filter(f => f.status === 'unread').length
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">💬</div>
+          <h1 className="text-2xl font-bold text-slate-800">Pesan dari Pengguna</h1>
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{unreadCount} baru</span>
+          )}
+        </div>
+        <p className="text-slate-500 text-sm ml-11">{feedbacks.length} total pesan masuk</p>
+      </div>
+      <AdminFeedbackClient feedbacks={feedbacks} />
+    </div>
+  )
+}

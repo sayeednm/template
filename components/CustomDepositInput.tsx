@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSettings } from '@/lib/settings'
 import { formatRupiah } from '@/lib/utils'
+import { sendNotification } from '@/lib/notifications'
+import { useToast } from '@/components/ToastProvider'
 
 type Props = { goalId: string }
 
@@ -13,6 +15,7 @@ export default function CustomDepositInput({ goalId }: Props) {
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState('')
   const router = useRouter()
+  const { showToast } = useToast()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '')
@@ -31,16 +34,22 @@ export default function CustomDepositInput({ goalId }: Props) {
     }
 
     setLoading(true)
-    await fetch('/api/savings/deposit', {
+    const res = await fetch('/api/savings/deposit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ goalId, amount, note: note.trim() || null }),
     })
+    const data = await res.json()
+
+    if (data.goalCompleted) {
+      showToast('🎉 Selamat! Goal kamu tercapai!', 'success')
+    } else {
+      showToast(`+${formatRupiah(amount)} berhasil ditabung!`, 'success')
+    }
 
     const settings = getSettings()
     if (settings.notifDeposit) {
-      setToast(`+${formatRupiah(amount)} berhasil ditabung!`)
-      setTimeout(() => setToast(''), 2500)
+      sendNotification('GoalSaver 💸', `+${formatRupiah(amount)} berhasil ditabung!`)
     }
 
     setDisplay('')

@@ -2,13 +2,13 @@ import { redirect } from 'next/navigation'
 import { verifySession } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
-import Image from 'next/image'
 import Link from 'next/link'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
 import ActiveSidebarNav from '@/components/ActiveSidebarNav'
 import DarkModeProvider from '@/components/DarkModeProvider'
+import UserDropdown from '@/components/UserDropdown'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await verifySession()
@@ -61,31 +61,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5">
-                {profile?.fotoProfil ? (
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-slate-200 shadow-sm">
-                    <Image src={profile.fotoProfil} alt="Profile" fill className="object-cover" sizes="36px" priority />
-                  </div>
-                ) : (
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 border-slate-200 shadow-sm font-bold text-white text-sm ${isAdmin ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-emerald-500 to-emerald-600'}`}>
-                    {session.email.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="hidden sm:flex flex-col">
-                  <span className="text-sm font-semibold text-slate-700 leading-tight">
-                    {profile?.name || session.email.split('@')[0]}
-                  </span>
-                  <span className={`text-xs font-medium ${isAdmin ? 'text-blue-500' : 'text-emerald-500'}`}>
-                    {isAdmin ? 'Administrator' : 'Member'}
-                  </span>
-                </div>
-              </div>
-              <div className="hidden sm:block h-6 w-px bg-slate-200" />
-              <form action={logoutAction}>
-                <button type="submit" className="text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors">
-                  Logout
-                </button>
-              </form>
+              <UserDropdown
+                email={session.email}
+                name={profile?.name ?? null}
+                fotoProfil={profile?.fotoProfil ?? null}
+                role={session.role}
+                isAdmin={isAdmin}
+              />
             </div>
           </div>
         </div>

@@ -32,6 +32,42 @@ export default function FloatingChatbot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  // Draggable state — hanya vertikal, selalu dalam layar
+  const [posY, setPosY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ y: 0, py: 0 });
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isOpen) return
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    dragStart.current = { y: clientY, py: posY }
+    setDragging(true)
+  }
+
+  useEffect(() => {
+    if (!dragging) return
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+      const newY = dragStart.current.py + (clientY - dragStart.current.y)
+      // Batasi agar tidak keluar layar (atas dan bawah)
+      const btnSize = 56
+      const maxUp = -(window.innerHeight - btnSize - 24) // batas atas
+      const maxDown = 0 // posisi awal (bawah)
+      setPosY(Math.max(maxUp, Math.min(maxDown, newY)))
+    }
+    const handleUp = () => setDragging(false)
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleUp)
+    window.addEventListener('touchmove', handleMove, { passive: true })
+    window.addEventListener('touchend', handleUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+      window.removeEventListener('touchmove', handleMove)
+      window.removeEventListener('touchend', handleUp)
+    }
+  }, [dragging])
+
   useEffect(() => {
     const saved = localStorage.getItem('chatHistory');
     if (saved) { try { setMessages(JSON.parse(saved)); } catch {} }
@@ -108,8 +144,12 @@ export default function FloatingChatbot() {
     <>
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          onClick={() => !dragging && setIsOpen(true)}
+          style={{ transform: `translateY(${posY}px)` }}
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50 cursor-grab active:cursor-grabbing select-none"
+          aria-label="Open AI Chat"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />

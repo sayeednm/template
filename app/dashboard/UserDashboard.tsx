@@ -51,30 +51,48 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
           Halo, {name || email.split('@')[0]} 👋
         </h1>
-        <p className="text-slate-500 mt-1">Yuk lihat progress tabunganmu hari ini!</p>
+        <p className="text-slate-500 mt-1 text-sm">Yuk lihat progress tabunganmu hari ini!</p>
       </div>
 
-      {/* Summary */}
-      {goals.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 sm:p-4 text-center">
-            <p className="text-xl sm:text-2xl font-bold text-emerald-700">{activeGoals.length}</p>
-            <p className="text-xs text-emerald-600 mt-1">Goal Aktif</p>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 text-center">
-            <p className="text-xl sm:text-2xl font-bold text-slate-700">{completedGoals.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Selesai</p>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 text-center">
-            <p className="text-sm sm:text-lg font-bold text-slate-700 leading-tight">{formatRupiah(totalSaved)}</p>
-            <p className="text-xs text-slate-500 mt-1">Terkumpul</p>
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
+        <div className="bg-emerald-500 rounded-2xl p-3 sm:p-4 text-white shadow-sm">
+          <p className="text-xs text-emerald-100 mb-1">Goal Aktif</p>
+          <p className="text-2xl sm:text-3xl font-bold">{activeGoals.length}</p>
         </div>
-      )}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm">
+          <p className="text-xs text-slate-400 mb-1">Tercapai</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-800">{completedGoals.length}</p>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm">
+          <p className="text-xs text-slate-400 mb-1">Terkumpul</p>
+          <p className="text-xs sm:text-sm font-bold text-slate-800 leading-tight truncate">{formatRupiah(totalSaved)}</p>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
+        <Link href="/dashboard/savings/new"
+          className="flex-shrink-0 flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+          + Tambah Goal
+        </Link>
+        <Link href="/dashboard/achievements"
+          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+          🏆 Capaian
+        </Link>
+        <Link href="/dashboard/savings/history"
+          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+          Riwayat
+        </Link>
+        <Link href="/dashboard/feedback"
+          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
+          Bantuan
+        </Link>
+      </div>
 
       {/* Announcement Banner */}
       <AnnouncementBanner announcements={announcements} />

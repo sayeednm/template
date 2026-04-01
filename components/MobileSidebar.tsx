@@ -15,6 +15,8 @@ export default function MobileSidebar({ role }: Props) {
     { href: '/dashboard', icon: '🏠', label: 'Dashboard' },
     { href: '/dashboard/savings/new', icon: '➕', label: 'Tambah Target' },
     { href: '/dashboard/savings/history', icon: '📋', label: 'Riwayat' },
+    { href: '/dashboard/achievements', icon: '🏆', label: 'Capaianku' },
+    { href: '/dashboard/feedback', icon: '💬', label: 'Hubungi Admin' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
     { href: '/dashboard/settings', icon: '⚙️', label: 'Pengaturan' },
   ]

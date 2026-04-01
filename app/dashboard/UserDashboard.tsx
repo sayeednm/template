@@ -74,23 +74,42 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
-        <Link href="/dashboard/savings/new"
-          className="flex-shrink-0 flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-          + Tambah Goal
+      {/* Quick Actions — grid profesional */}
+      <div className="grid grid-cols-4 gap-2 mb-5">
+        <Link href="/dashboard/savings/new" className="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-2xl py-3 px-2 hover:bg-emerald-50 hover:border-emerald-200 transition-all group">
+          <div className="w-9 h-9 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center transition-colors">
+            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-slate-600 group-hover:text-emerald-700 text-center leading-tight">Tambah Goal</span>
         </Link>
-        <Link href="/dashboard/achievements"
-          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-          🏆 Capaian
+
+        <Link href="/dashboard/achievements" className="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-2xl py-3 px-2 hover:bg-amber-50 hover:border-amber-200 transition-all group">
+          <div className="w-9 h-9 bg-amber-100 group-hover:bg-amber-200 rounded-xl flex items-center justify-center transition-colors">
+            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-slate-600 group-hover:text-amber-700 text-center leading-tight">Capaian</span>
         </Link>
-        <Link href="/dashboard/savings/history"
-          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-          Riwayat
+
+        <Link href="/dashboard/savings/history" className="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-2xl py-3 px-2 hover:bg-blue-50 hover:border-blue-200 transition-all group">
+          <div className="w-9 h-9 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center transition-colors">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-slate-600 group-hover:text-blue-700 text-center leading-tight">Riwayat</span>
         </Link>
-        <Link href="/dashboard/feedback"
-          className="flex-shrink-0 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-xl transition-colors">
-          Bantuan
+
+        <Link href="/dashboard/feedback" className="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-2xl py-3 px-2 hover:bg-violet-50 hover:border-violet-200 transition-all group">
+          <div className="w-9 h-9 bg-violet-100 group-hover:bg-violet-200 rounded-xl flex items-center justify-center transition-colors">
+            <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <span className="text-xs font-medium text-slate-600 group-hover:text-violet-700 text-center leading-tight">Bantuan</span>
         </Link>
       </div>
 

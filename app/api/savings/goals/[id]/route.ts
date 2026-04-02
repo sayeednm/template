@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   })
   if (!goal) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const { title, targetAmount, deadline, emoji, isPaused } = await req.json()
+  const { title, targetAmount, deadline, emoji, isPaused, isArchived } = await req.json()
 
   let updateData: any = {
     title: title ?? goal.title,
@@ -20,6 +20,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     deadline: deadline !== undefined ? (deadline ? new Date(deadline) : null) : goal.deadline,
     emoji: emoji ?? goal.emoji,
     isCompleted: (targetAmount ?? goal.targetAmount) <= goal.currentAmount,
+  }
+
+  // Handle arsip
+  if (isArchived !== undefined) {
+    updateData = { isArchived }
+    const updated = await prisma.savingGoal.update({ where: { id }, data: updateData })
+    return NextResponse.json(updated)
   }
 
   // Handle pause/resume dengan deadline adjustment

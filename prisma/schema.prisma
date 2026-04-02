@@ -52,6 +52,7 @@ model SavingGoal {
   imageUrl     String?
   isPaused     Boolean       @default(false)
   pausedAt     DateTime?
+  isArchived   Boolean       @default(false)
   isCompleted  Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

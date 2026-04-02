@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import prisma from '@/lib/prisma'
 
 const VERSION = '1.0.0'
 const FEATURES = [
@@ -12,7 +13,14 @@ const FEATURES = [
   { icon: '🌙', title: 'Mode Gelap', desc: 'Tampilan gelap yang nyaman untuk mata di malam hari.' },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Ambil update terbaru dari pengumuman admin
+  const updates = await prisma.announcement.findMany({
+    where: { type: 'update' },
+    orderBy: { createdAt: 'desc' },
+    take: 3,
+  })
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
       <div className="text-center mb-8">
@@ -26,6 +34,31 @@ export default function AboutPage() {
         </span>
       </div>
 
+      {/* Update Terbaru */}
+      {updates.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
+          <div className="px-5 py-4 border-b border-slate-100 bg-emerald-50">
+            <h2 className="font-semibold text-emerald-800 flex items-center gap-2">
+              <span>🚀</span> Update Terbaru
+            </h2>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {updates.map((u) => (
+              <div key={u.id} className="px-5 py-3.5">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-sm font-medium text-slate-700">{u.title}</p>
+                  <span className="text-xs text-slate-400 flex-shrink-0">
+                    {new Date(u.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">{u.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Deskripsi */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
         <h2 className="font-semibold text-slate-800 mb-2">Tentang GoalSaver</h2>
         <p className="text-sm text-slate-600 leading-relaxed">
@@ -37,6 +70,7 @@ export default function AboutPage() {
         </p>
       </div>
 
+      {/* Fitur */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
           <h2 className="font-semibold text-slate-800">Fitur Unggulan</h2>
@@ -54,24 +88,7 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
-        <h2 className="font-semibold text-slate-800 mb-3">Informasi Teknis</h2>
-        <div className="space-y-2 text-sm">
-          {[
-            ['Versi', VERSION],
-            ['Platform', 'Web App (PWA)'],
-            ['AI Engine', 'Groq AI — Llama 3.3 70B'],
-            ['Database', 'PostgreSQL (Supabase)'],
-            ['Framework', 'Next.js 15'],
-          ].map(([label, value]) => (
-            <div key={label} className="flex justify-between">
-              <span className="text-slate-500">{label}</span>
-              <span className="font-medium text-slate-700">{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
+      {/* Feedback */}
       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center">
         <p className="text-sm text-emerald-700 mb-3">Ada saran atau masalah? Kami senang mendengarnya!</p>
         <Link href="/dashboard/feedback"

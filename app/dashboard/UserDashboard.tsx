@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatRupiah, daysLeft, calcDailyTarget, getMotivation } from '@/lib/utils'
@@ -8,6 +9,7 @@ import DepositButton from '@/components/DepositButton'
 import CustomDepositInput from '@/components/CustomDepositInput'
 import DeadlineAlert from '@/components/DeadlineAlert'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
+import { useToast } from '@/components/ToastProvider'
 
 type Transaction = { id: string; amount: number; note: string | null; createdAt: Date }
 type Goal = {
@@ -19,6 +21,7 @@ type Goal = {
   deadline: Date | null
   isCompleted: boolean
   isPaused: boolean
+  isArchived: boolean
   imageUrl: string | null
   createdAt: Date
   transactions: Transaction[]
@@ -35,6 +38,7 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
   const completedGoals = goals.filter((g) => g.isCompleted)
 
   const filteredGoals = goals
+    .filter((g) => !g.isArchived) // sembunyikan yang sudah diarsipkan
     .filter((g) => showCompleted || !g.isCompleted)
     .sort((a, b) => {
       if (sortBy === 'progress') {
@@ -260,6 +264,7 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
           >
             Detail
           </Link>
+          {goal.isCompleted && <ArchiveButton goalId={goal.id} />}
         </div>
         {!goal.isCompleted && !goal.isPaused && <CustomDepositInput goalId={goal.id} />}
       </div>
@@ -295,5 +300,34 @@ function EmptyState() {
         </div>
       </div>
     </div>
+  )
+}
+
+function ArchiveButton({ goalId }: { goalId: string }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const { showToast } = useToast()
+
+  const handleArchive = async () => {
+    if (!confirm('Arsipkan goal ini? Goal akan disembunyikan dari dashboard tapi tetap bisa dilihat di halaman Capaian.')) return
+    setLoading(true)
+    await fetch(`/api/savings/goals/${goalId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isArchived: true }),
+    })
+    showToast('Goal berhasil diarsipkan!', 'success')
+    router.refresh()
+    setLoading(false)
+  }
+
+  return (
+    <button
+      onClick={handleArchive}
+      disabled={loading}
+      className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-50"
+    >
+      {loading ? '...' : '📦 Arsipkan'}
+    </button>
   )
 }

@@ -75,9 +75,19 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-10">
+      <div className="flex-1 flex flex-col lg:items-center lg:justify-center bg-white">
+        {/* Mobile hero banner */}
+        <div className="lg:hidden bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-10 pb-8 text-white">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">💰</div>
+            <span className="text-xl font-bold">GoalSaver</span>
+          </div>
+          <h2 className="text-2xl font-bold mb-1">Selamat datang!</h2>
+          <p className="text-emerald-100 text-sm">Masuk dan lanjutkan perjalanan menabungmu.</p>
+        </div>
+
+        <div className="w-full max-w-sm px-6 py-8 lg:py-0 mx-auto">
+          <div className="hidden lg:flex items-center gap-2 mb-10">
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-base">💰</div>
             <span className="text-lg font-bold text-slate-800">GoalSaver</span>
           </div>
@@ -106,8 +116,8 @@ export default function LoginPage() {
             Belum punya akun?{' '}
             <Link href="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold">Daftar gratis</Link>
           </p>
+          <p className="text-center text-xs text-slate-300 mt-6">GoalSaver v1.0.0</p>
         </div>
-      </div>
-    </div>
+      </div>    </div>
   )
 }

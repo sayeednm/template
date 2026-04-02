@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { logoutAction } from '@/app/actions/auth-actions'
+import { useRouter } from 'next/navigation'
 
 type Props = {
   email: string
@@ -15,9 +15,10 @@ type Props = {
 
 export default function UserDropdown({ email, name, fotoProfil, role, isAdmin }: Props) {
   const [open, setOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
-  // Tutup dropdown saat klik di luar
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -25,6 +26,13 @@ export default function UserDropdown({ email, name, fotoProfil, role, isAdmin }:
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+    router.refresh()
+  }
 
   const accentColor = isAdmin ? 'from-blue-500 to-blue-600' : 'from-emerald-500 to-emerald-600'
   const displayName = name || email.split('@')[0]
@@ -79,11 +87,13 @@ export default function UserDropdown({ email, name, fotoProfil, role, isAdmin }:
 
           {/* Logout */}
           <div className="p-1.5 border-t border-slate-100">
-            <form action={logoutAction}>
-              <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors">
-                <span>🚪</span> Logout
-              </button>
-            </form>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              <span>🚪</span> {loggingOut ? 'Keluar...' : 'Logout'}
+            </button>
           </div>
         </div>
       )}

@@ -99,3 +99,5 @@ export default async function AboutPage() {
     </div>
   )
 }
+
+export const revalidate = 300 // cache 5 menit

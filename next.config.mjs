@@ -1,12 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
+    remotePatterns: [{ protocol: 'https', hostname: '**' }],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 3600,
     deviceSizes: [640, 750, 828, 1080, 1200],
@@ -14,21 +9,26 @@ const nextConfig = {
   },
   compress: true,
   poweredByHeader: false,
-  reactStrictMode: true,
-  // Optimasi bundle
+  reactStrictMode: false, // Matikan strict mode di production untuk performa
   experimental: {
-    optimizePackageImports: ['recharts', '@supabase/supabase-js'],
+    optimizePackageImports: ['recharts', '@supabase/supabase-js', 'groq-sdk'],
   },
-  // Header cache untuk assets statis
+  // Aggressive caching untuk static assets
   async headers() {
     return [
       {
-        source: '/icon-:size.png',
+        source: '/(icon-192|icon-512)\\.png',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/manifest.json',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
       },
     ]
   },

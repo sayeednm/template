@@ -7,24 +7,22 @@ export default async function DashboardPage() {
   const session = await verifySession()
 
   if (session?.role === 'ADMIN') {
-    // Admin: ambil statistik global
-    const [totalUsers, totalGoals, totalSaved] = await Promise.all([
+    const [totalUsers, totalGoals, totalSaved, recentUsers] = await Promise.all([
       prisma.user.count(),
       prisma.savingGoal.count(),
       prisma.savingGoal.aggregate({ _sum: { currentAmount: true } }),
+      prisma.user.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          _count: { select: { savingGoals: true } },
+        },
+      }),
     ])
-
-    const recentUsers = await prisma.user.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        _count: { select: { savingGoals: true } },
-      },
-    })
 
     return (
       <AdminDashboard

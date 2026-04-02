@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { verifySession } from '@/lib/session'
-import { logoutAction } from '@/app/actions/auth-actions'
 import prisma from '@/lib/prisma'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import FloatingChatbot from '@/components/FloatingChatbot'
 import InstallPWA from '@/components/InstallPWA'
 import MobileSidebar from '@/components/MobileSidebar'
@@ -10,14 +10,23 @@ import ActiveSidebarNav from '@/components/ActiveSidebarNav'
 import DarkModeProvider from '@/components/DarkModeProvider'
 import UserDropdown from '@/components/UserDropdown'
 
+// Cache profile query — revalidate setiap 60 detik
+const getProfile = unstable_cache(
+  async (userId: string) => {
+    return prisma.profile.findUnique({
+      where: { userId },
+      select: { fotoProfil: true, name: true },
+    })
+  },
+  ['user-profile'],
+  { revalidate: 60 }
+)
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await verifySession()
   if (!session) redirect('/login')
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: session.userId },
-    select: { fotoProfil: true, name: true },
-  })
+  const profile = await getProfile(session.userId)
 
   const isAdmin = session.role === 'ADMIN'
 

@@ -1,11 +1,11 @@
 {
-  "name": "Dashboard Template",
-  "short_name": "Dashboard",
-  "description": "Next.js Dashboard dengan AI Chatbot",
+  "name": "GoalSaver",
+  "short_name": "GoalSaver",
+  "description": "Aplikasi tabungan berbasis goal dengan AI",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#10b981",
   "orientation": "portrait-primary",
   "icons": [
     {

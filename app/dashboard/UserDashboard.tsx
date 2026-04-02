@@ -28,7 +28,7 @@ type Props = { goals: Goal[]; userId: string; email: string; name: string | null
 
 export default function UserDashboard({ goals, email, name, announcements }: Props) {
   const [sortBy, setSortBy] = useState<'newest' | 'progress' | 'deadline'>('newest')
-  const [showCompleted, setShowCompleted] = useState(true)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const activeGoals = goals.filter((g) => !g.isCompleted)
@@ -127,13 +127,14 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-slate-700">Goal Tabunganmu</h2>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Filter completed */}
-              <button
-                onClick={() => setShowCompleted(!showCompleted)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${showCompleted ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}
-              >
-                {showCompleted ? 'Semua' : 'Aktif saja'}
-              </button>
+              {completedGoals.length > 0 && (
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${showCompleted ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}
+                >
+                  {showCompleted ? `Sembunyikan yang selesai (${completedGoals.length})` : `Tampilkan semua`}
+                </button>
+              )}
               {/* Sort */}
               <select
                 value={sortBy}

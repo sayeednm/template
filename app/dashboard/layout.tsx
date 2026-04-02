@@ -29,6 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: '/dashboard/feedback', icon: '💬', label: 'Hubungi Admin' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
     { href: '/dashboard/settings', icon: '⚙️', label: 'Pengaturan' },
+    { href: '/dashboard/about', icon: 'ℹ️', label: 'Tentang App' },
   ]
 
   const adminLinks = [

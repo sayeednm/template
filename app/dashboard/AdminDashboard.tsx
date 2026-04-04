@@ -42,6 +42,8 @@ export default function AdminDashboard({ totalUsers, totalGoals, totalSaved, rec
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
         {[
           { href: '/dashboard/users', icon: '👥', label: 'Kelola Pengguna' },
+          { href: '/dashboard/announcements', icon: '📢', label: 'Pengumuman' },
+          { href: '/dashboard/admin-feedback', icon: '💬', label: 'Pesan Masuk' },
           { href: '/dashboard/reports', icon: '📈', label: 'Laporan Global' },
           { href: '/dashboard/profile', icon: '👤', label: 'Profile Admin' },
         ].map((item) => (

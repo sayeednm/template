@@ -25,6 +25,8 @@ export default function MobileSidebar({ role }: Props) {
   const adminLinks = [
     { href: '/dashboard', icon: '📊', label: 'Overview' },
     { href: '/dashboard/users', icon: '👥', label: 'Pengguna' },
+    { href: '/dashboard/announcements', icon: '📢', label: 'Pengumuman' },
+    { href: '/dashboard/admin-feedback', icon: '💬', label: 'Pesan Masuk' },
     { href: '/dashboard/reports', icon: '📈', label: 'Laporan' },
     { href: '/dashboard/profile', icon: '👤', label: 'Profile' },
   ]

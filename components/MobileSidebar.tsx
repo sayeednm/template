@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -8,8 +8,24 @@ type Props = { role: string }
 
 export default function MobileSidebar({ role }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const pathname = usePathname()
   const isAdmin = role === 'ADMIN'
+
+  useEffect(() => {
+    if (isAdmin) return
+    const check = async () => {
+      try {
+        const res = await fetch('/api/announcements')
+        const data = await res.json()
+        const readIds: string[] = JSON.parse(localStorage.getItem('read_announcements') ?? '[]')
+        setUnreadCount(data.filter((a: { id: string }) => !readIds.includes(a.id)).length)
+      } catch {}
+    }
+    check()
+    const interval = setInterval(check, 30000)
+    return () => clearInterval(interval)
+  }, [isAdmin])
 
   const userLinks = [
     { href: '/dashboard', icon: '🏠', label: 'Dashboard' },
@@ -73,7 +89,14 @@ export default function MobileSidebar({ role }: Props) {
                 }`}>
                 <span className="text-base">{link.icon}</span>
                 <span>{link.label}</span>
-                {isActive && <span className={`ml-auto w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />}
+                {link.href === '/dashboard/notifications' && unreadCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+                {isActive && link.href !== '/dashboard/notifications' && (
+                  <span className={`ml-auto w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />
+                )}
               </Link>
             )
           })}

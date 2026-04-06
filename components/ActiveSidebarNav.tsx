@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import NotificationBadge from '@/components/NotificationBadge'
 
 type NavLink = { href: string; icon: string; label: string }
 
@@ -11,6 +12,11 @@ export default function ActiveSidebarNav({ links, isAdmin }: { links: NavLink[];
   return (
     <>
       {links.map((link) => {
+        // Gunakan komponen khusus untuk Pemberitahuan
+        if (link.href === '/dashboard/notifications') {
+          return <NotificationBadge key={link.href} />
+        }
+
         const isActive = link.href === '/dashboard'
           ? pathname === '/dashboard'
           : pathname.startsWith(link.href)

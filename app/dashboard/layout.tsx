@@ -9,6 +9,7 @@ import MobileSidebar from '@/components/MobileSidebar'
 import ActiveSidebarNav from '@/components/ActiveSidebarNav'
 import DarkModeProvider from '@/components/DarkModeProvider'
 import UserDropdown from '@/components/UserDropdown'
+import SidebarToggle from '@/components/SidebarToggle'
 
 // Cache profile query — revalidate setiap 60 detik
 const getProfile = unstable_cache(
@@ -70,6 +71,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   GoalSaver{isAdmin ? ' Admin' : ''}
                 </span>
               </div>
+              <SidebarToggle />
             </div>
             <div className="flex items-center gap-3">
               <UserDropdown
@@ -86,7 +88,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex lg:flex-col w-60 bg-white border-r border-slate-200 shadow-sm">
+        <aside className="dashboard-sidebar hidden lg:flex lg:flex-col w-60 bg-white border-r border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
               {isAdmin ? 'Admin Panel' : 'Menu'}

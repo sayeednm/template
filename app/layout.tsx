@@ -42,6 +42,10 @@ export default function RootLayout({
               if (s && JSON.parse(s).darkMode) {
                 document.documentElement.classList.add('dark');
               }
+              var sb = localStorage.getItem('sidebar_collapsed');
+              if (sb === 'true') {
+                document.documentElement.setAttribute('data-sidebar', 'collapsed');
+              }
             } catch(e) {}
           `
         }} />

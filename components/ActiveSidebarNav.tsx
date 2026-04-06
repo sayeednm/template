@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import NotificationBadge from '@/components/NotificationBadge'
 import AdminFeedbackBadge from '@/components/AdminFeedbackBadge'
+import FeedbackBadge from '@/components/FeedbackBadge'
 
 type NavLink = { href: string; icon: string; label: string }
 
@@ -13,6 +14,11 @@ export default function ActiveSidebarNav({ links, isAdmin }: { links: NavLink[];
   return (
     <>
       {links.map((link) => {
+        // Gunakan komponen khusus untuk Hubungi Admin (user)
+        if (link.href === '/dashboard/feedback') {
+          return <FeedbackBadge key={link.href} />
+        }
+
         // Gunakan komponen khusus untuk Pemberitahuan
         if (link.href === '/dashboard/notifications') {
           return <NotificationBadge key={link.href} />

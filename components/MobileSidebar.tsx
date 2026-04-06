@@ -9,6 +9,7 @@ type Props = { role: string }
 export default function MobileSidebar({ role }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [hasNewReply, setHasNewReply] = useState(false)
   const pathname = usePathname()
   const isAdmin = role === 'ADMIN'
 
@@ -26,13 +27,23 @@ export default function MobileSidebar({ role }: Props) {
       const interval = setInterval(checkFeedback, 30000)
       return () => clearInterval(interval)
     } else {
-      // User: cek unread announcements
+      // User: cek unread announcements + new replies
       const check = async () => {
         try {
-          const res = await fetch('/api/announcements')
-          const data = await res.json()
+          const [annRes, fbRes] = await Promise.all([
+            fetch('/api/announcements'),
+            fetch('/api/feedback'),
+          ])
+          const announcements = await annRes.json()
+          const feedbacks = await fbRes.json()
+
           const readIds: string[] = JSON.parse(localStorage.getItem('read_announcements') ?? '[]')
-          setUnreadCount(data.filter((a: { id: string }) => !readIds.includes(a.id)).length)
+          setUnreadCount(announcements.filter((a: { id: string }) => !readIds.includes(a.id)).length)
+
+          const lastSeen = parseInt(localStorage.getItem('feedback_last_seen') ?? '0')
+          setHasNewReply(feedbacks.some((f: { status: string; updatedAt: string }) =>
+            f.status === 'replied' && new Date(f.updatedAt).getTime() > lastSeen
+          ))
         } catch {}
       }
       check()
@@ -120,7 +131,12 @@ export default function MobileSidebar({ role }: Props) {
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-                {isActive && link.href !== '/dashboard/notifications' && link.href !== '/dashboard/admin-feedback' && (
+                {link.href === '/dashboard/feedback' && hasNewReply && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+                    !
+                  </span>
+                )}
+                {isActive && link.href !== '/dashboard/notifications' && link.href !== '/dashboard/admin-feedback' && link.href !== '/dashboard/feedback' && (
                   <span className={`ml-auto w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />
                 )}
               </Link>

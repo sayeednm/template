@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import NotificationBadge from '@/components/NotificationBadge'
+import AdminFeedbackBadge from '@/components/AdminFeedbackBadge'
 
 type NavLink = { href: string; icon: string; label: string }
 
@@ -15,6 +16,11 @@ export default function ActiveSidebarNav({ links, isAdmin }: { links: NavLink[];
         // Gunakan komponen khusus untuk Pemberitahuan
         if (link.href === '/dashboard/notifications') {
           return <NotificationBadge key={link.href} />
+        }
+
+        // Gunakan komponen khusus untuk Pesan Masuk admin
+        if (link.href === '/dashboard/admin-feedback') {
+          return <AdminFeedbackBadge key={link.href} />
         }
 
         const isActive = link.href === '/dashboard'

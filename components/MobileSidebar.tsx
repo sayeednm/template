@@ -13,18 +13,32 @@ export default function MobileSidebar({ role }: Props) {
   const isAdmin = role === 'ADMIN'
 
   useEffect(() => {
-    if (isAdmin) return
-    const check = async () => {
-      try {
-        const res = await fetch('/api/announcements')
-        const data = await res.json()
-        const readIds: string[] = JSON.parse(localStorage.getItem('read_announcements') ?? '[]')
-        setUnreadCount(data.filter((a: { id: string }) => !readIds.includes(a.id)).length)
-      } catch {}
+    if (isAdmin) {
+      // Admin: cek unread feedback
+      const checkFeedback = async () => {
+        try {
+          const res = await fetch('/api/feedback/unread-count')
+          const data = await res.json()
+          setUnreadCount(data.count)
+        } catch {}
+      }
+      checkFeedback()
+      const interval = setInterval(checkFeedback, 30000)
+      return () => clearInterval(interval)
+    } else {
+      // User: cek unread announcements
+      const check = async () => {
+        try {
+          const res = await fetch('/api/announcements')
+          const data = await res.json()
+          const readIds: string[] = JSON.parse(localStorage.getItem('read_announcements') ?? '[]')
+          setUnreadCount(data.filter((a: { id: string }) => !readIds.includes(a.id)).length)
+        } catch {}
+      }
+      check()
+      const interval = setInterval(check, 30000)
+      return () => clearInterval(interval)
     }
-    check()
-    const interval = setInterval(check, 30000)
-    return () => clearInterval(interval)
   }, [isAdmin])
 
   const userLinks = [
@@ -94,7 +108,12 @@ export default function MobileSidebar({ role }: Props) {
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-                {isActive && link.href !== '/dashboard/notifications' && (
+                {link.href === '/dashboard/admin-feedback' && unreadCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+                {isActive && link.href !== '/dashboard/notifications' && link.href !== '/dashboard/admin-feedback' && (
                   <span className={`ml-auto w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />
                 )}
               </Link>

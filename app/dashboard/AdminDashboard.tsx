@@ -1,5 +1,6 @@
 import { formatRupiah } from '@/lib/utils'
 import Link from 'next/link'
+import AdminQuickLinks from './AdminQuickLinks'
 
 type User = {
   id: string
@@ -39,21 +40,7 @@ export default function AdminDashboard({ totalUsers, totalGoals, totalSaved, rec
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-        {[
-          { href: '/dashboard/users', icon: '👥', label: 'Kelola Pengguna' },
-          { href: '/dashboard/announcements', icon: '📢', label: 'Pengumuman' },
-          { href: '/dashboard/admin-feedback', icon: '💬', label: 'Pesan Masuk' },
-          { href: '/dashboard/reports', icon: '📈', label: 'Laporan Global' },
-          { href: '/dashboard/profile', icon: '👤', label: 'Profile Admin' },
-        ].map((item) => (
-          <Link key={item.href} href={item.href}
-            className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 hover:bg-blue-50 hover:border-blue-200 transition-all group">
-            <span className="text-xl">{item.icon}</span>
-            <span className="text-sm font-medium text-slate-700 group-hover:text-blue-700">{item.label}</span>
-          </Link>
-        ))}
-      </div>
+      <AdminQuickLinks />
 
       {/* Recent Users Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

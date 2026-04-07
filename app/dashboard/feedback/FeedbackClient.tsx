@@ -50,7 +50,7 @@ export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feed
             ✅ Pesan berhasil dikirim! Admin akan segera membalas.
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 force-light">
           {/* Kategori */}
           <div>
             <label className="block text-sm font-medium text-slate-600 mb-2">Kategori</label>
@@ -78,7 +78,7 @@ export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feed
             <label className="block text-sm font-medium text-slate-600 mb-1.5">Subjek</label>
             <input type="text" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
               placeholder="Ringkasan singkat pesanmu"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-white text-slate-800"
               required />
           </div>
           <div>
@@ -86,7 +86,7 @@ export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feed
             <textarea value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
               placeholder="Jelaskan lebih detail..."
               rows={4} required
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm resize-none" />
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm resize-none bg-white text-slate-800" />
           </div>
           <button type="submit" disabled={loading}
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50">

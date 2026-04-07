@@ -133,3 +133,12 @@ html[data-sidebar="collapsed"] .dashboard-sidebar {
 .dashboard-sidebar {
   transition: width 0.25s ease, padding 0.25s ease;
 }
+
+/* Force light mode untuk form input agar tetap terbaca */
+.force-light input,
+.force-light textarea,
+.force-light select {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+}

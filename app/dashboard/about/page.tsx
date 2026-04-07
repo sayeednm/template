@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
+import InstallButton from '@/components/InstallButton'
 
 const VERSION = '1.0.0'
 const FEATURES = [
@@ -86,6 +87,12 @@ export default async function AboutPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Install App */}
+      <div className="mb-4">
+        <h2 className="font-semibold text-slate-800 mb-3">📲 Install Aplikasi</h2>
+        <InstallButton />
       </div>
 
       {/* Feedback */}

@@ -10,7 +10,8 @@ const TYPE_CONFIG = {
   warning: { bg: 'bg-orange-50 border-orange-200', icon: '⚠️', title: 'text-orange-800', text: 'text-orange-700', close: 'text-orange-400 hover:text-orange-600' },
 }
 
-export default function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
+export default function AnnouncementBanner({ announcements: initial }: { announcements: Announcement[] }) {
+  const [announcements, setAnnouncements] = useState(initial)
   const [dismissed, setDismissed] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
 
@@ -20,6 +21,19 @@ export default function AnnouncementBanner({ announcements }: { announcements: A
       setDismissed(saved)
     } catch {}
     setMounted(true)
+  }, [])
+
+  // Auto-refresh pengumuman setiap 10 detik
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch('/api/announcements')
+      if (res.ok) {
+        const data = await res.json()
+        setAnnouncements(data)
+      }
+    }
+    const interval = setInterval(poll, 10000)
+    return () => clearInterval(interval)
   }, [])
 
   if (!mounted) return null

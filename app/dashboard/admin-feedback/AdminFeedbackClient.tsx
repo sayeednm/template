@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Feedback = { id: string; subject: string; message: string; status: string; category: string; reply: string | null; createdAt: Date; user: { email: string } }
@@ -24,6 +24,25 @@ export default function AdminFeedbackClient({ feedbacks: initial }: { feedbacks:
   const [replyingId, setReplyingId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Auto-refresh setiap 10 detik untuk lihat pesan baru dari user
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch('/api/feedback/all')
+      if (res.ok) {
+        const data = await res.json()
+        setFeedbacks(data)
+      }
+    }
+    const interval = setInterval(poll, 10000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Hapus pesan ini?')) return
+    await fetch(`/api/feedback/${id}`, { method: 'DELETE' })
+    setFeedbacks(prev => prev.filter(f => f.id !== id))
+  }
 
   const handleReply = async (id: string) => {
     if (!replyText.trim()) return
@@ -123,6 +142,10 @@ export default function AdminFeedbackClient({ feedbacks: initial }: { feedbacks:
                 <button onClick={() => { setReplyingId(f.id); setReplyText(f.reply ?? '') }}
                   className="text-xs px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors">
                   {f.reply ? 'Edit Balasan' : '💬 Balas'}
+                </button>
+                <button onClick={() => handleDelete(f.id)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors ml-auto">
+                  🗑️ Hapus
                 </button>
               </div>
             )}

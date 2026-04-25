@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Feedback = { id: string; subject: string; message: string; status: string; reply: string | null; createdAt: Date }
@@ -17,6 +17,19 @@ export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feed
   const [form, setForm] = useState({ subject: '', message: '', category: 'question' })
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+
+  // Auto-refresh setiap 10 detik untuk lihat balasan admin
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch('/api/feedback')
+      if (res.ok) {
+        const data = await res.json()
+        setFeedbacks(data)
+      }
+    }
+    const interval = setInterval(poll, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

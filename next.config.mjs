@@ -9,11 +9,11 @@ const nextConfig = {
   },
   compress: true,
   poweredByHeader: false,
-  reactStrictMode: false, // Matikan strict mode di production untuk performa
+  reactStrictMode: false,
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   experimental: {
     optimizePackageImports: ['recharts', '@supabase/supabase-js', 'groq-sdk'],
   },
-  // Aggressive caching untuk static assets
   async headers() {
     return [
       {
@@ -26,9 +26,7 @@ const nextConfig = {
       },
       {
         source: '/api/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'no-store' },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
     ]
   },

@@ -1,17 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 
-/**
- * Singleton Pattern untuk Prisma Client
- * Mencegah multiple instances di development hot reload
- */
 const prismaClientSingleton = () => {
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
   })
 }
 
@@ -26,19 +17,6 @@ export default prisma
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prismaGlobal = prisma
 }
-
-/**
- * Graceful Shutdown Pattern
- * Disconnect database saat process exit
- */
-const gracefulShutdown = async () => {
-  await prisma.$disconnect()
-  process.exit(0)
-}
-
-process.on('beforeExit', gracefulShutdown)
-process.on('SIGINT', gracefulShutdown)
-process.on('SIGTERM', gracefulShutdown)
 
 /**
  * Retry Pattern dengan Exponential Backoff

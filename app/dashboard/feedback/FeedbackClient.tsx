@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 type Feedback = { id: string; subject: string; message: string; status: string; reply: string | null; createdAt: Date }
 
@@ -12,7 +11,6 @@ const STATUS_CONFIG = {
 }
 
 export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feedback[] }) {
-  const router = useRouter()
   const [feedbacks, setFeedbacks] = useState(initial)
   const [form, setForm] = useState({ subject: '', message: '', category: 'question' })
   const [loading, setLoading] = useState(false)
@@ -48,7 +46,6 @@ export default function FeedbackClient({ feedbacks: initial }: { feedbacks: Feed
       setForm({ subject: '', message: '', category: 'question' })
       setSent(true)
       setTimeout(() => setSent(false), 3000)
-      router.refresh()
     }
     setLoading(false)
   }

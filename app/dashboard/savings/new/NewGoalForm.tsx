@@ -5,7 +5,16 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { formatRupiah, daysLeft, calcDailyTarget } from '@/lib/utils'
 
-const EMOJIS = ['🎯', '🏠', '✈️', '💻', '🚗', '📱', '👗', '🎓', '💍', '🏖️', '🎮', '📷']
+const EMOJIS = ['🎯', '🏠', '✈️', '💻', '🚗', '📱', '👗', '🎓', '💍', '🏖️', '🎮', '📷', '🕌', '🤲']
+
+const TEMPLATES = [
+  { label: 'Haji', emoji: '🕌', target: 45000000, description: 'Estimasi ONH Plus' },
+  { label: 'Umroh', emoji: '🤲', target: 25000000, description: 'Estimasi paket umroh' },
+  { label: 'Beli Rumah', emoji: '🏠', target: 50000000, description: 'DP rumah pertama' },
+  { label: 'Beli Mobil', emoji: '🚗', target: 30000000, description: 'DP kendaraan' },
+  { label: 'Dana Pendidikan', emoji: '🎓', target: 20000000, description: 'Biaya kuliah/sekolah' },
+  { label: 'Liburan', emoji: '🏖️', target: 5000000, description: 'Liburan impian' },
+]
 
 export default function NewGoalForm() {
   const router = useRouter()
@@ -61,6 +70,32 @@ export default function NewGoalForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Template Goal */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <label className="block text-sm font-medium text-slate-700 mb-3">⚡ Mulai dari Template</label>
+        <div className="grid grid-cols-2 gap-2">
+          {TEMPLATES.map((t) => (
+            <button
+              key={t.label}
+              type="button"
+              onClick={() => setForm({ ...form, title: t.label, targetAmount: String(t.target), emoji: t.emoji })}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                form.title === t.label && form.emoji === t.emoji
+                  ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200'
+                  : 'border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <span className="text-xl">{t.emoji}</span>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{t.label}</p>
+                <p className="text-xs text-slate-400">{t.description}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-slate-400 mt-2">Target bisa diubah sesuai kebutuhan kamu</p>
+      </div>
+
       {/* Foto Barang Incaran */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
         <label className="block text-sm font-medium text-slate-700 mb-3">📸 Foto Barang Incaran (opsional)</label>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 type Feedback = { id: string; subject: string; message: string; status: string; category: string; reply: string | null; createdAt: Date; user: { email: string } }
 
@@ -19,7 +18,6 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminFeedbackClient({ feedbacks: initial }: { feedbacks: Feedback[] }) {
-  const router = useRouter()
   const [feedbacks, setFeedbacks] = useState(initial)
   const [replyingId, setReplyingId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -59,7 +57,6 @@ export default function AdminFeedbackClient({ feedbacks: initial }: { feedbacks:
       setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, ...data } : f))
       setReplyingId(null)
       setReplyText('')
-      router.refresh()
     }
     setLoading(false)
   }

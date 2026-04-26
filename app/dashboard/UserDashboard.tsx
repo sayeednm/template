@@ -32,6 +32,7 @@ type Props = { goals: Goal[]; userId: string; email: string; name: string | null
 export default function UserDashboard({ goals, email, name, announcements }: Props) {
   const [sortBy, setSortBy] = useState<'newest' | 'progress' | 'deadline'>('newest')
   const [showCompleted, setShowCompleted] = useState(false)
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
 
   const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0)
   const activeGoals = goals.filter((g) => !g.isCompleted)
@@ -158,10 +159,15 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
             <div className="text-center py-8 text-slate-400 text-sm">Tidak ada goal yang ditampilkan</div>
           ) : (
             filteredGoals.map((goal, index) => (
-              <GoalCard key={goal.id} goal={goal} index={index} />
+              <GoalCard key={goal.id} goal={goal} index={index} onOpen={() => setSelectedGoal(goal)} />
             ))
           )}
         </div>
+      )}
+
+      {/* Goal Focus Modal */}
+      {selectedGoal && (
+        <GoalModal goal={selectedGoal} onClose={() => setSelectedGoal(null)} />
       )}
     </div>
   )
@@ -176,7 +182,7 @@ const CARD_ACCENTS = [
   'from-cyan-400 to-sky-500',
 ]
 
-function GoalCard({ goal, index }: { goal: Goal; index: number }) {
+function GoalCard({ goal, index, onOpen }: { goal: Goal; index: number; onOpen: () => void }) {
   const accent = CARD_ACCENTS[index % CARD_ACCENTS.length]
   const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
   const remaining = goal.targetAmount - goal.currentAmount
@@ -184,7 +190,10 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
   const dailyTarget = goal.deadline && remaining > 0 ? calcDailyTarget(remaining, goal.deadline) : null
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 ${goal.isCompleted ? 'border-emerald-200' : 'border-slate-200'}`}>
+    <div
+      onClick={onOpen}
+      className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 duration-200 cursor-pointer ${goal.isCompleted ? 'border-emerald-200' : 'border-slate-200'}`}
+    >
       {/* Accent bar */}
       <div className={`h-1 w-full bg-gradient-to-r ${goal.isCompleted ? 'from-emerald-400 to-teal-400' : accent}`} />
       <div className="p-5">
@@ -245,7 +254,7 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
         })()}
 
         {/* Quick Deposit Buttons */}
-        <div className="flex gap-2 flex-wrap mt-3">
+        <div className="flex gap-2 flex-wrap mt-3" onClick={e => e.stopPropagation()}>
           {!goal.isCompleted && !goal.isPaused && (
             <>
               <DepositButton goalId={goal.id} amount={10000} label="+10rb" />
@@ -266,7 +275,140 @@ function GoalCard({ goal, index }: { goal: Goal; index: number }) {
           </Link>
           {goal.isCompleted && <ArchiveButton goalId={goal.id} />}
         </div>
-        {!goal.isCompleted && !goal.isPaused && <CustomDepositInput goalId={goal.id} />}
+        {!goal.isCompleted && !goal.isPaused && (
+          <div onClick={e => e.stopPropagation()}>
+            <CustomDepositInput goalId={goal.id} />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function GoalModal({ goal, onClose }: { goal: Goal; onClose: () => void }) {
+  const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+  const remaining = goal.targetAmount - goal.currentAmount
+  const days = goal.deadline ? daysLeft(goal.deadline) : null
+  const dailyTarget = goal.deadline && remaining > 0 ? calcDailyTarget(remaining, goal.deadline) : null
+  const mot = getMotivation(progress)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header dengan foto/gradient */}
+        <div className="relative h-36 bg-gradient-to-br from-emerald-400 to-teal-500 flex-shrink-0">
+          {goal.imageUrl && (
+            <Image src={goal.imageUrl} alt={goal.title} fill className="object-cover" />
+          )}
+          <div className="absolute inset-0 bg-black/30" />
+          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="absolute bottom-4 left-5 flex items-center gap-3">
+            <span className="text-4xl">{goal.emoji ?? '🎯'}</span>
+            <div>
+              <h2 className="text-xl font-bold text-white">{goal.title}</h2>
+              {goal.isCompleted ? (
+                <span className="text-xs font-semibold text-emerald-200">✅ Tercapai!</span>
+              ) : days !== null ? (
+                <span className="text-xs text-white/80">{days > 0 ? `${days} hari lagi` : 'Deadline terlewat'}</span>
+              ) : (
+                <span className="text-xs text-white/80">Tanpa deadline</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          {/* Progress */}
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="font-bold text-emerald-600 text-lg">{formatRupiah(goal.currentAmount)}</span>
+              <span className="text-slate-400 self-end">dari {formatRupiah(goal.targetAmount)}</span>
+            </div>
+            <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-700"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-slate-400 mt-1.5">
+              <span className={`font-medium ${mot.color}`}>{mot.emoji} {progress.toFixed(1)}% — {mot.message}</span>
+              <span>Sisa {formatRupiah(remaining)}</span>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 rounded-2xl p-3 text-center">
+              <p className="text-xs text-slate-400 mb-1">Terkumpul</p>
+              <p className="font-bold text-slate-800">{formatRupiah(goal.currentAmount)}</p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl p-3 text-center">
+              <p className="text-xs text-slate-400 mb-1">Sisa Target</p>
+              <p className="font-bold text-slate-800">{formatRupiah(remaining)}</p>
+            </div>
+            {dailyTarget && (
+              <div className="bg-emerald-50 rounded-2xl p-3 text-center col-span-2">
+                <p className="text-xs text-emerald-600 mb-1">Nabung per hari agar tepat waktu</p>
+                <p className="font-bold text-emerald-700">{formatRupiah(dailyTarget)}/hari</p>
+              </div>
+            )}
+          </div>
+
+          {/* Transaksi terakhir */}
+          {goal.transactions.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 mb-2">Transaksi Terakhir</p>
+              <div className="space-y-2">
+                {goal.transactions.slice(0, 3).map(t => (
+                  <div key={t.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">💸</span>
+                      <span className="text-xs text-slate-500">{t.note ?? 'Deposit'}</span>
+                    </div>
+                    <span className="text-xs font-bold text-emerald-600">+{formatRupiah(t.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Deposit */}
+          {!goal.isCompleted && !goal.isPaused && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 mb-2">Tambah Tabungan</p>
+              <div className="flex gap-2 flex-wrap">
+                <DepositButton goalId={goal.id} amount={10000} label="+10rb" />
+                <DepositButton goalId={goal.id} amount={50000} label="+50rb" />
+                <DepositButton goalId={goal.id} amount={100000} label="+100rb" />
+              </div>
+              <CustomDepositInput goalId={goal.id} />
+            </div>
+          )}
+          {goal.isPaused && (
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 text-center text-sm text-orange-600 font-medium">
+              ⏸ Goal ini sedang dijeda
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 flex-shrink-0">
+          <Link
+            href={`/dashboard/goals/${goal.id}`}
+            className="block w-full text-center bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+          >
+            Lihat Detail Lengkap →
+          </Link>
+        </div>
       </div>
     </div>
   )

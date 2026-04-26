@@ -25,6 +25,14 @@ export default function NotificationsClient({ announcements }: { announcements: 
     const next = [...read, id]
     setRead(next)
     localStorage.setItem('read_announcements', JSON.stringify(next))
+    window.dispatchEvent(new Event('announcementRead'))
+  }
+
+  const markAllRead = () => {
+    const allIds = announcements.map(a => a.id)
+    setRead(allIds)
+    localStorage.setItem('read_announcements', JSON.stringify(allIds))
+    window.dispatchEvent(new Event('announcementRead'))
   }
 
   const unreadCount = announcements.filter(a => !read.includes(a.id)).length
@@ -44,11 +52,7 @@ export default function NotificationsClient({ announcements }: { announcements: 
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-slate-500">{unreadCount} belum dibaca</span>
           <button
-            onClick={() => {
-              const allIds = announcements.map(a => a.id)
-              setRead(allIds)
-              localStorage.setItem('read_announcements', JSON.stringify(allIds))
-            }}
+            onClick={markAllRead}
             className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
           >
             Tandai semua dibaca

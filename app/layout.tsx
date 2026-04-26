@@ -46,6 +46,11 @@ export default function RootLayout({
                 document.documentElement.setAttribute('data-sidebar', 'collapsed');
               }
             } catch(e) {}
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js');
+              });
+            }
           `
         }} />
       </head>

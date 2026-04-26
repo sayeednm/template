@@ -21,9 +21,12 @@ export default function NotificationBadge() {
 
   useEffect(() => {
     checkUnread()
-    // Polling setiap 30 detik
     const interval = setInterval(checkUnread, 30000)
-    return () => clearInterval(interval)
+    window.addEventListener('announcementRead', checkUnread)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('announcementRead', checkUnread)
+    }
   }, [])
 
   // Reset badge saat buka halaman notifikasi

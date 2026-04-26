@@ -1,29 +1,32 @@
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-10">
-        <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-md">
-          💰
-        </div>
-        <span className="text-2xl font-bold text-slate-800">GoalSaver</span>
+    <div className="min-h-screen bg-emerald-500 flex flex-col items-center justify-center gap-6">
+      {/* Icon */}
+      <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center shadow-lg">
+        <span className="text-5xl">💰</span>
       </div>
 
-      {/* Animated progress bar */}
-      <div className="w-48 h-1 bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-emerald-500 rounded-full"
-          style={{
-            animation: 'loading-bar 1.4s ease-in-out infinite',
-          }}
-        />
+      {/* App name */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-white">GoalSaver</h1>
+        <p className="text-emerald-100 text-sm mt-1">Tabungan berbasis goal</p>
+      </div>
+
+      {/* Loading dots */}
+      <div className="flex gap-2 mt-4">
+        {[0, 1, 2].map(i => (
+          <div
+            key={i}
+            className="w-2 h-2 bg-white rounded-full opacity-80"
+            style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+          />
+        ))}
       </div>
 
       <style>{`
-        @keyframes loading-bar {
-          0% { width: 0%; margin-left: 0%; }
-          50% { width: 60%; margin-left: 20%; }
-          100% { width: 0%; margin-left: 100%; }
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+          40% { transform: scale(1); opacity: 1; }
         }
       `}</style>
     </div>

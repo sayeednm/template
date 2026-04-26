@@ -4,7 +4,7 @@
   "description": "Aplikasi tabungan berbasis goal dengan AI",
   "start_url": "/",
   "display": "fullscreen",
-  "background_color": "#ffffff",
+  "background_color": "#10b981",
   "theme_color": "#10b981",
   "orientation": "portrait-primary",
   "icons": [

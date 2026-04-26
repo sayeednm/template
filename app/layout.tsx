@@ -33,6 +33,9 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="theme-color" content="#10b981" />
         {/* Inject dark mode sebelum render untuk hindari flash */}
         <script dangerouslySetInnerHTML={{
           __html: `

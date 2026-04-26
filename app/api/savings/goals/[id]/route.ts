@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from 'next/cache'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -55,6 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data: updateData,
   })
 
+  revalidateTag('dashboard')
   return NextResponse.json(updated)
 }
 
@@ -70,5 +72,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   await prisma.savingGoal.delete({ where: { id } })
 
+  revalidateTag('dashboard')
   return NextResponse.json({ success: true })
 }

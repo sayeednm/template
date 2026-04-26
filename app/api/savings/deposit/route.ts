@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from 'next/cache'
 
 export async function POST(req: NextRequest) {
   const session = await verifySession()
@@ -30,5 +31,6 @@ export async function POST(req: NextRequest) {
     }),
   ])
 
+  revalidateTag('dashboard')
   return NextResponse.json({ success: true, transaction, goalCompleted: isCompleted })
 }

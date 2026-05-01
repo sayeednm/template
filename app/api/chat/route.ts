@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { chatWithGroq } from '@/lib/groq';
 import { verifySession } from '@/lib/session';
 import { detectToolNeeded, executeAITool, createGoalForUser, getUserGoals } from '@/lib/ai-tools';
+import { revalidateTag } from 'next/cache';
 
 const SYSTEM_PROMPT = `Kamu adalah AI Assistant GoalSaver yang ramah, cerdas, dan sangat membantu.
 
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
         goalData.deadline,
         goalData.emoji
       );
+      if (result.success) revalidateTag('dashboard');
       return NextResponse.json(result);
     }
 

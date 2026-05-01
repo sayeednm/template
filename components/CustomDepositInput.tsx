@@ -7,9 +7,9 @@ import { formatRupiah } from '@/lib/utils'
 import { sendNotification } from '@/lib/notifications'
 import { useToast } from '@/components/ToastProvider'
 
-type Props = { goalId: string }
+type Props = { goalId: string; onDeposit?: (amount: number, completed: boolean) => void }
 
-export default function CustomDepositInput({ goalId }: Props) {
+export default function CustomDepositInput({ goalId, onDeposit }: Props) {
   const [display, setDisplay] = useState('')
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,6 +50,10 @@ export default function CustomDepositInput({ goalId }: Props) {
     const settings = getSettings()
     if (settings.notifDeposit) {
       sendNotification('GoalSaver 💸', `+${formatRupiah(amount)} berhasil ditabung!`)
+    }
+
+    if (onDeposit && data.transaction) {
+      onDeposit(amount, data.goalCompleted)
     }
 
     setDisplay('')

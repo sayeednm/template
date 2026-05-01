@@ -167,7 +167,17 @@ export default function UserDashboard({ goals, email, name, announcements }: Pro
 
       {/* Goal Focus Modal */}
       {selectedGoal && (
-        <GoalModal goal={selectedGoal} onClose={() => setSelectedGoal(null)} />
+        <GoalModal
+          goal={selectedGoal}
+          onClose={() => setSelectedGoal(null)}
+          onDeposit={(amount, completed) => {
+            setSelectedGoal(prev => prev ? {
+              ...prev,
+              currentAmount: prev.currentAmount + amount,
+              isCompleted: completed,
+            } : null)
+          }}
+        />
       )}
     </div>
   )
@@ -285,7 +295,7 @@ function GoalCard({ goal, index, onOpen }: { goal: Goal; index: number; onOpen: 
   )
 }
 
-function GoalModal({ goal, onClose }: { goal: Goal; onClose: () => void }) {
+function GoalModal({ goal, onClose, onDeposit }: { goal: Goal; onClose: () => void; onDeposit: (amount: number, completed: boolean) => void }) {
   const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
   const remaining = goal.targetAmount - goal.currentAmount
   const days = goal.deadline ? daysLeft(goal.deadline) : null
@@ -386,11 +396,11 @@ function GoalModal({ goal, onClose }: { goal: Goal; onClose: () => void }) {
             <div>
               <p className="text-xs font-semibold text-slate-500 mb-2">Tambah Tabungan</p>
               <div className="flex gap-2 flex-wrap">
-                <DepositButton goalId={goal.id} amount={10000} label="+10rb" />
-                <DepositButton goalId={goal.id} amount={50000} label="+50rb" />
-                <DepositButton goalId={goal.id} amount={100000} label="+100rb" />
+                <DepositButton goalId={goal.id} amount={10000} label="+10rb" onDeposit={onDeposit} />
+                <DepositButton goalId={goal.id} amount={50000} label="+50rb" onDeposit={onDeposit} />
+                <DepositButton goalId={goal.id} amount={100000} label="+100rb" onDeposit={onDeposit} />
               </div>
-              <CustomDepositInput goalId={goal.id} />
+              <CustomDepositInput goalId={goal.id} onDeposit={onDeposit} />
             </div>
           )}
           {goal.isPaused && (

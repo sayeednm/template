@@ -7,9 +7,9 @@ import { formatRupiah } from '@/lib/utils'
 import { sendNotification } from '@/lib/notifications'
 import { useToast } from '@/components/ToastProvider'
 
-type Props = { goalId: string; amount: number; label: string }
+type Props = { goalId: string; amount: number; label: string; onDeposit?: (newAmount: number, completed: boolean) => void }
 
-export default function DepositButton({ goalId, amount, label }: Props) {
+export default function DepositButton({ goalId, amount, label, onDeposit }: Props) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { showToast } = useToast()
@@ -27,7 +27,6 @@ export default function DepositButton({ goalId, amount, label }: Props) {
     })
     const data = await res.json()
 
-    // Cek apakah goal tercapai
     if (data.goalCompleted) {
       showToast('🎉 Selamat! Goal kamu tercapai!', 'success')
     } else {
@@ -37,6 +36,10 @@ export default function DepositButton({ goalId, amount, label }: Props) {
     const settings = getSettings()
     if (settings.notifDeposit) {
       sendNotification('GoalSaver 💸', `+${formatRupiah(amount)} berhasil ditabung!`)
+    }
+
+    if (onDeposit && data.transaction) {
+      onDeposit(amount, data.goalCompleted)
     }
 
     router.refresh()

@@ -220,14 +220,18 @@ export default function GoalDetailClient({ goal }: { goal: Goal }) {
   )
 }
 
-function TransactionRow({ t, isLast, goalId }: { t: Transaction; isLast: boolean; goalId: string }) {
+function TransactionRow({ t, isLast, goalId, onDelete }: { t: Transaction; isLast: boolean; goalId: string; onDelete?: (amount: number, newAmount: number) => void }) {
   const [deleting, setDeleting] = useState(false)
   const router = useRouter()
 
   const handleDelete = async () => {
     if (!confirm('Hapus transaksi ini? Saldo goal akan berkurang.')) return
     setDeleting(true)
-    await fetch(`/api/savings/transactions/${t.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/savings/transactions/${t.id}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (res.ok && data.newAmount !== undefined) {
+      onDelete?.(t.amount, data.newAmount)
+    }
     router.refresh()
   }
 

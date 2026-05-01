@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/session'
 import prisma from '@/lib/prisma'
+import { revalidateTag } from 'next/cache'
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,10 +26,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       where: { id: transaction.goalId },
       data: {
         currentAmount: newAmount,
-        isCompleted: false, // reset completed jika ada transaksi dihapus
+        isCompleted: false,
       },
     }),
   ])
 
-  return NextResponse.json({ success: true })
+  revalidateTag('dashboard')
+  return NextResponse.json({ success: true, newAmount, goalId: transaction.goalId })
 }
